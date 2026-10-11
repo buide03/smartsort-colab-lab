@@ -7,6 +7,7 @@ let appConfig = {allow_local_train:true,colab_notebook:'https://colab.research.g
 let session = null, page = 1, filter = 'all', offset = 0, selected = new Set(), trialChoice = null;
 let pollTimer, toastTimer, uploading = false, loadingSession = false;
 const PAGE_SIZE = 12;
+let testView = {material:'all', outcome:'all', sort:'confidence', query:'', page:0};
 function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function pct(n, digits = 1) { return Number.isFinite(n) ? (n * 100).toFixed(digits) + '%' : '—'; }
 function num(n, digits = 3) { return Number.isFinite(n) ? n.toFixed(digits) : '—'; }
@@ -44,6 +45,7 @@ async function loadSessions(preferred) {
   $('#sessionPicker').innerHTML = list.map(s => `<option value="${s.id}"${s.id === chosen.id ? ' selected' : ''}>${esc(s.title)}</option>`).join('');
   localStorage.setItem('smartsort.session', session.id);
   page = Math.min(5, phaseSteps[session.phase] || 1); selected.clear(); trialChoice = null; filter = 'all'; offset = 0;
+  testView = {material:'all', outcome:'all', sort:'confidence', query:'', page:0};
   loadingSession = false; render();
 }
 function heading(number, title, description, status = '') {
@@ -136,6 +138,37 @@ function confusion(cm) {
   const max=Math.max(1,...cm.flat());
   return `<div class="axis-label">Cột: nhãn dự đoán</div><div class="confusion"><div></div>${['metal','paper','plastic'].map(c=>`<div class="label">${names[c]}</div>`).join('')}${cm.map((row,i)=>`<div class="label">${names[['metal','paper','plastic'][i]]}</div>${row.map((v,j)=>`<div class="cell" style="background:${i===j?`rgba(18,107,81,${.1+.8*v/max})`:`rgba(225,142,67,${.08+.75*v/max})`};color:${i===j && v/max>.45?'white':'#16372f'}">${v}</div>`).join('')}`).join('')}</div><div class="axis-label">Hàng: nhãn thật · Ô ngoài đường chéo là lỗi phân loại.</div>`;
 }
+function testProbabilities(p) {
+  return `<div class="test-probabilities">${['metal','paper','plastic'].map(c=>{
+    const value=p['prob_'+c];
+    return `<div class="test-probability"><span>${names[c]}</span><meter min="0" max="1" value="${Number.isFinite(value)?Math.max(0,Math.min(1,value)):0}" aria-label="Xác suất ${names[c]}"></meter><strong>${pct(value)}</strong></div>`;
+  }).join('')}</div>`;
+}
+function filteredTestPredictions() {
+  const query=testView.query.trim().toLocaleLowerCase('vi');
+  return session.results.predictions.filter(p=>(testView.material==='all'||p.true_label===testView.material)
+    &&(testView.outcome==='all'||(testView.outcome==='correct'?p.correct:!p.correct))
+    &&(!query||p.filename.toLocaleLowerCase('vi').includes(query)))
+    .sort((a,b)=>testView.sort==='filename'?a.filename.localeCompare(b.filename):testView.sort==='uncertain'?a.confidence-b.confidence:b.confidence-a.confidence);
+}
+function renderTestGallery() {
+  const all=session.results.predictions, items=filteredTestPredictions(), pages=Math.max(1,Math.ceil(items.length/PAGE_SIZE));
+  testView.page=Math.max(0,Math.min(testView.page,pages-1));
+  return `<div class="card" id="testVisualization"><div class="card-head"><h2>Detection · Nhận diện vật liệu trên tập test</h2><span class="tag">${all.length} ảnh</span></div>
+    <p>Model phân loại toàn bộ ảnh thành Kim loại, Giấy hoặc Nhựa. Model hiện tại không xác định vị trí hay vẽ khung từng vật thể. Bấm ảnh để xem lớn và so sánh kết quả.</p>
+    <div class="test-class-summary">${['metal','paper','plastic'].map(c=>{
+      const rows=all.filter(p=>p.true_label===c),right=rows.filter(p=>p.correct).length;
+      return `<div class="test-class-stat"><strong><span class="dot ${c}"></span> ${names[c]}</strong><span>${right} đúng · ${rows.length-right} sai / ${rows.length} ảnh thật</span><div class="test-outcome-bar" role="img" aria-label="${names[c]}: ${right} đúng, ${rows.length-right} sai"><span style="width:${rows.length?100*right/rows.length:0}%"></span></div></div>`;
+    }).join('')}</div>
+    <div class="toolbar test-filters"><label>Nhãn thật<select id="testMaterial"><option value="all">Cả ba vật liệu</option>${['metal','paper','plastic'].map(c=>`<option value="${c}"${testView.material===c?' selected':''}>${names[c]}</option>`).join('')}</select></label>
+    <label>Kết quả<select id="testOutcome">${[['all','Tất cả'],['correct','Dự đoán đúng'],['wrong','Dự đoán sai']].map(([v,t])=>`<option value="${v}"${testView.outcome===v?' selected':''}>${t}</option>`).join('')}</select></label>
+    <label>Sắp xếp<select id="testSort">${[['confidence','Độ tin cậy cao trước'],['uncertain','Độ tin cậy thấp trước'],['filename','Tên ảnh']].map(([v,t])=>`<option value="${v}"${testView.sort===v?' selected':''}>${t}</option>`).join('')}</select></label>
+    <label>Tìm tên ảnh<input id="testSearch" type="search" value="${esc(testView.query)}" placeholder="Nhập tên ảnh"></label></div>
+    <p id="testMatchCount" aria-live="polite">Hiển thị ${items.length} / ${all.length} ảnh test · Màu xanh: đúng; màu cam: sai.</p>
+    ${items.length?`<div class="gallery test-gallery">${items.slice(testView.page*PAGE_SIZE,(testView.page+1)*PAGE_SIZE).map(p=>`<article class="image-card test-image-card ${p.correct?'test-correct':'test-wrong'}"><button type="button" class="image-wrap test-image-button" data-enlarge="${esc(p.id)}" data-test-result="${esc(p.id)}" data-caption="${esc(p.filename)}" aria-label="Xem ${esc(p.filename)}: thật ${names[p.true_label]}, dự đoán ${names[p.predicted_label]}, ${p.correct?'đúng':'sai'}"><img src="${url('images/'+p.id)}" alt="Ảnh test ${esc(p.filename)}" loading="lazy"><span class="test-result-badge">${p.correct?'✓ Đúng':'✕ Sai'}</span></button><div class="image-meta"><div class="filename" title="${esc(p.filename)}">${esc(p.filename)}</div><div class="test-labels">Nhãn thật: <strong>${names[p.true_label]}</strong><br>Dự đoán: <strong>${names[p.predicted_label]}</strong><br>Độ tin cậy: <strong>${pct(p.confidence)}</strong></div>${testProbabilities(p)}</div></article>`).join('')}</div>`:'<div class="empty"><strong>Không có ảnh phù hợp</strong>Thử đổi bộ lọc hoặc tên ảnh.</div>'}
+    <div class="pagination"><button class="button small ghost" id="testPrev"${disabled(testView.page===0)}>← Trước</button><span>Trang ${testView.page+1} / ${pages}</span><button class="button small ghost" id="testNext"${disabled(testView.page+1>=pages)}>Sau →</button></div>
+    ${teaching('Quan sát lỗi để đánh giá model','So sánh các ảnh sai có độ tin cậy cao và các ảnh đúng có độ tin cậy thấp. Độ tin cậy không phải mức bảo đảm đúng. Kết quả hiển thị đã được lưu từ lần chạy test; lọc ảnh không chạy lại model và không thay đổi cấu hình.')}</div>`;
+}
 function renderTest() {
   if (!session.selected) return heading(5,'Đánh giá bằng dữ liệu chưa dùng để chọn mô hình.','Test chỉ được mở khi cấu hình đã chốt.')+noPrerequisite('Hãy chốt mô hình bằng validation',4,'Đi đến bước chốt');
   const r=session.results;
@@ -143,7 +176,7 @@ function renderTest() {
   const wrong=r.predictions.filter(p=>!p.correct).sort((a,b)=>b.confidence-a.confidence);
   const downloads=[['SmartSort_Results.zip','Toàn bộ kết quả','ZIP'],['REPORT.md','Báo cáo & câu hỏi thảo luận','MD'],['test_predictions.csv','Dự đoán từng ảnh','CSV'],['SmartSort_Locked_Model.zip','Mô hình đã chốt','ZIP'],['labels_and_splits.csv','Nhãn & danh sách chia','CSV']];
   return heading(5,'Kết quả để hiểu mô hình.', 'Đối chiếu kết quả cuối với validation, xem từng lớp và kiểm tra ảnh sai. Đây là bằng chứng cho thí nghiệm này, không phải bảo đảm hiệu năng ngoài thực tế.', 'TEST ĐÃ HOÀN TẤT')+
-    `<div class="metric-grid"><div class="stat accent"><small>TEST ACCURACY</small><strong>${pct(r.accuracy)}</strong><span>${r.n} ảnh</span></div><div class="stat"><small>MACRO-F1</small><strong>${num(r.macro_f1)}</strong></div><div class="stat"><small>VALIDATION MACRO-F1</small><strong>${num(session.selected.validation.macro_f1)}</strong></div><div class="stat"><small>SỐ ẢNH DỰ ĐOÁN SAI</small><strong>${wrong.length}</strong><span>/ ${r.n}</span></div></div><div class="grid"><div><div class="card"><h2>Kết quả từng vật liệu</h2>${perClassTable(r.per_class)}${teaching('Đọc kết quả đúng cách','Precision: các dự đoán thuộc lớp có bao nhiêu ảnh đúng. Recall: các ảnh thật thuộc lớp được nhận ra bao nhiêu. F1 kết hợp precision và recall; macro-F1 cho ba lớp trọng số bằng nhau.')}</div><div class="card"><h2>Ma trận nhầm lẫn</h2>${confusion(r.confusion_matrix)}</div><div class="card"><h2>Những điểm cần đánh giá</h2>${r.observations.map((text,i)=>`<div class="observation"><span>${String(i+1).padStart(2,'0')}</span><div>${esc(text)}</div></div>`).join('')}<div class="summary-list"><div><small>KHOẢNG WILSON 95% CHO ACCURACY</small>${pct(r.accuracy_ci95[0])} — ${pct(r.accuracy_ci95[1])}</div><div><small>LOG-LOSS / BRIER</small>${num(r.loss)} / ${num(r.brier_multiclass)}</div><div><small>COVERAGE TẠI NGƯỠNG ${r.confidence_threshold}</small>${pct(r.coverage)}</div><div><small>ACCURACY TRÊN ẢNH ĐƯỢC CHẤP NHẬN</small>${pct(r.accepted_accuracy)}</div></div></div><div class="card"><div class="card-head"><h2>Ảnh sai — ưu tiên confidence cao</h2><span class="tag">${wrong.length} ảnh</span></div>${wrong.length?`<div class="gallery">${wrong.slice(0,24).map(p=>`<article class="image-card"><div class="image-wrap" data-enlarge="${p.id}" data-caption="${esc(p.filename)}"><img src="${url('images/'+p.id)}" alt="Ảnh test phân loại sai" loading="lazy"></div><div class="image-meta"><div class="filename">${esc(p.filename)}</div><div style="font-size:10px">Thật: <strong>${names[p.true_label]}</strong><br>Đoán: <strong>${names[p.predicted_label]}</strong><br>Confidence: ${pct(p.confidence)}</div></div></article>`).join('')}</div>`:'<div class="notice success">Không có ảnh test sai trong lần chạy này.</div>'}</div><div class="card"><h2>Thử một ảnh mới</h2><p>Dùng mô hình đã chốt. Confidence cao vẫn có thể sai, đặc biệt với vật ngoài ba lớp.</p><input class="file-input" id="predictInput" type="file" accept="image/*"><button class="button ghost" id="choosePredict">Chọn ảnh mới</button><div id="predictResult"></div></div></div><aside><div class="card"><h3>Lưu kết quả bài thực hành</h3><p>File ZIP chứa báo cáo, CSV, nhãn, danh sách chia, cấu hình và checkpoint.</p><div class="download-list">${downloads.map(([file,title,ext])=>`<a class="button ghost" href="${url('download/'+file)}">↓ ${title}<small>${ext}</small></a>`).join('')}</div></div>${question('THẢO LUẬN KẾT QUẢ','Lớp nào dễ bỏ sót? Lỗi tập trung ở ánh sáng, nền, góc chụp hay hình dạng nào? Bạn cần bổ sung dữ liệu gì để kiểm tra giả thuyết đó?')}${question('KẾT THÚC THÍ NGHIỆM','Phiên này giữ nguyên cấu hình và kết quả test. Tạo phiên mới với dữ liệu test độc lập nếu muốn cải tiến. Không tạo lại cùng dữ liệu chỉ để chọn seed có điểm cao.')}</aside></div>`;
+    `<div class="metric-grid"><div class="stat accent"><small>TEST ACCURACY</small><strong>${pct(r.accuracy)}</strong><span>${r.n} ảnh</span></div><div class="stat"><small>MACRO-F1</small><strong>${num(r.macro_f1)}</strong></div><div class="stat"><small>VALIDATION MACRO-F1</small><strong>${num(session.selected.validation.macro_f1)}</strong></div><div class="stat"><small>SỐ ẢNH DỰ ĐOÁN SAI</small><strong>${wrong.length}</strong><span>/ ${r.n}</span></div></div><div class="grid"><div><div class="card"><h2>Kết quả từng vật liệu</h2>${perClassTable(r.per_class)}${teaching('Đọc kết quả đúng cách','Precision: các dự đoán thuộc lớp có bao nhiêu ảnh đúng. Recall: các ảnh thật thuộc lớp được nhận ra bao nhiêu. F1 kết hợp precision và recall; macro-F1 cho ba lớp trọng số bằng nhau.')}</div><div class="card"><h2>Ma trận nhầm lẫn</h2>${confusion(r.confusion_matrix)}</div><div class="card"><h2>Những điểm cần đánh giá</h2>${r.observations.map((text,i)=>`<div class="observation"><span>${String(i+1).padStart(2,'0')}</span><div>${esc(text)}</div></div>`).join('')}<div class="summary-list"><div><small>KHOẢNG WILSON 95% CHO ACCURACY</small>${pct(r.accuracy_ci95[0])} — ${pct(r.accuracy_ci95[1])}</div><div><small>LOG-LOSS / BRIER</small>${num(r.loss)} / ${num(r.brier_multiclass)}</div><div><small>COVERAGE TẠI NGƯỠNG ${r.confidence_threshold}</small>${pct(r.coverage)}</div><div><small>ACCURACY TRÊN ẢNH ĐƯỢC CHẤP NHẬN</small>${pct(r.accepted_accuracy)}</div></div></div>${renderTestGallery()}<div class="card"><h2>Thử một ảnh mới</h2><p>Dùng mô hình đã chốt. Confidence cao vẫn có thể sai, đặc biệt với vật ngoài ba lớp.</p><input class="file-input" id="predictInput" type="file" accept="image/*"><button class="button ghost" id="choosePredict">Chọn ảnh mới</button><div id="predictResult"></div></div></div><aside><div class="card"><h3>Lưu kết quả bài thực hành</h3><p>File ZIP chứa báo cáo, CSV, nhãn, danh sách chia, cấu hình và checkpoint.</p><div class="download-list">${downloads.map(([file,title,ext])=>`<a class="button ghost" href="${url('download/'+file)}">↓ ${title}<small>${ext}</small></a>`).join('')}</div></div>${question('THẢO LUẬN KẾT QUẢ','Lớp nào dễ bỏ sót? Lỗi tập trung ở ánh sáng, nền, góc chụp hay hình dạng nào? Bạn cần bổ sung dữ liệu gì để kiểm tra giả thuyết đó?')}${question('KẾT THÚC THÍ NGHIỆM','Phiên này giữ nguyên cấu hình và kết quả test. Tạo phiên mới với dữ liệu test độc lập nếu muốn cải tiến. Không tạo lại cùng dữ liệu chỉ để chọn seed có điểm cao.')}</aside></div>`;
 }
 function renderJob() {
   const node=$('#jobBanner'),job=session?.job;
@@ -171,6 +204,10 @@ async function upload(fileList) {
   } finally { uploading=false;$('#sessionPicker').disabled=false;$('#newSession').disabled=false;render(); }
 }
 function bindPage() {
+  ['testMaterial','testOutcome','testSort'].forEach((id,i)=>$('#'+id)?.addEventListener('change',e=>{testView[['material','outcome','sort'][i]]=e.target.value;testView.page=0;render();}));
+  $('#testSearch')?.addEventListener('input',e=>{const cursor=e.target.selectionStart;testView.query=e.target.value;testView.page=0;render();const input=$('#testSearch');input.focus();input.setSelectionRange(cursor,cursor);});
+  $('#testPrev')?.addEventListener('click',()=>{testView.page--;render();});
+  $('#testNext')?.addEventListener('click',()=>{testView.page++;render();});
   $('#chooseFiles')?.addEventListener('click',()=>$('#uploadInput').click());
   $('#uploadInput')?.addEventListener('change',e=>act(()=>upload(e.target.files)));
   const drop=$('#dropzone');
@@ -216,7 +253,13 @@ function bindPage() {
 }
 document.addEventListener('click',e=>{
   const nav=e.target.closest('[data-go]');if(nav && !nav.disabled)go(nav.dataset.go);
-  const image=e.target.closest('[data-enlarge]');if(image && !e.target.matches('input')){$('#largeImage').src=url('images/'+image.dataset.enlarge);$('#largeCaption').textContent=image.dataset.caption;$('#imageDialog').showModal();}
+  const image=e.target.closest('[data-enlarge]');if(image && !e.target.matches('input')){
+    $('#largeImage').src=url('images/'+image.dataset.enlarge);$('#largeCaption').textContent=image.dataset.caption;
+    const details=$('#largeTestResult');details.innerHTML='';
+    const prediction=image.dataset.testResult&&session.results?.predictions.find(p=>p.id===image.dataset.testResult);
+    if(prediction)details.innerHTML=`<p class="test-labels">${prediction.correct?'✓ Dự đoán đúng':'✕ Dự đoán sai'} · Nhãn thật: <strong>${names[prediction.true_label]}</strong> · Dự đoán: <strong>${names[prediction.predicted_label]}</strong> · Độ tin cậy: <strong>${pct(prediction.confidence)}</strong></p>${testProbabilities(prediction)}`;
+    $('#imageDialog').showModal();
+  }
 });
 $('#sessionPicker').addEventListener('change',e=>act(()=>loadSessions(e.target.value)));
 $('#newSession').addEventListener('click',()=>{$('#newTitle').value='';$('#newDialog').showModal();$('#newTitle').focus();});

@@ -20,7 +20,7 @@
     <footer class="main-footer">EfficientNet-B0 · Transfer learning <span>Train → Validation → Chốt → Test</span></footer>
   </main>
   <div id="toast" role="status" class="toast hidden"></div>
-  <dialog id="imageDialog"><button class="dialog-close" onclick="this.closest('dialog').close()" aria-label="Đóng">×</button><img id="largeImage" alt="Ảnh đang xem"><p id="largeCaption"></p></dialog>
+  <dialog id="imageDialog"><button class="dialog-close" onclick="this.closest('dialog').close()" aria-label="Đóng">×</button><img id="largeImage" alt="Ảnh đang xem"><p id="largeCaption"></p><div id="largeTestResult"></div></dialog>
   <dialog id="newDialog"><h2>Tạo phiên thực hành</h2><p>Mỗi phiên giữ riêng ảnh, nhãn, cấu hình và kết quả.</p><label>Tên bài thực hành<input id="newTitle" placeholder="Ví dụ: Nhóm 1 — Phân loại vật liệu" maxlength="100"></label><div class="dialog-actions"><button class="button ghost" id="cancelNew">Hủy</button><button class="button primary" id="confirmNew">Tạo phiên</button></div></dialog>
   <script src="/vendor/fflate.js"></script><script src="/vendor/ort.wasm.min.js"></script><script src="/browser-engine.js"></script><script src="/app.js"></script>
 </body>

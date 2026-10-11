@@ -12,6 +12,8 @@
 
 # SmartSort Classroom — huấn luyện, chốt mô hình và đánh giá test
 
+**Trực quan kết quả test:** bước 5 có thư viện ảnh đúng/sai, bộ lọc từng vật liệu, độ tin cậy và xác suất ba lớp. Xem [hướng dẫn đọc kết quả trên ảnh](docs/XEM_KET_QUA_TEST.md). Model phân loại cả ảnh; không tạo khung vị trí vật thể.
+
 **Sản phẩm chính: giao diện local dùng dạy học với ảnh chưa có nhãn.** Backend Python/FastAPI, giao diện HTML/CSS/JavaScript, mô hình EfficientNet-B0. Notebook Colab cũ bên dưới được giữ nguyên làm ví dụ với dữ liệu đã có nhãn.
 
 ## Bản triển khai lớp học: Colab + Docker/Railway

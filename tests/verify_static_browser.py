@@ -11,6 +11,7 @@ import numpy as np
 from PIL import Image,ImageOps
 from playwright.sync_api import sync_playwright
 from colab.train_browser_colab import train_browser_package
+from tests.verify_test_visualization import verify_gallery
 
 ROOT=Path(__file__).resolve().parents[1]
 OUT=ROOT/'tests/runtime'
@@ -99,11 +100,14 @@ with sync_playwright() as playwright:
     state=call(page,base)['data'];assert state['phase']=='trained'
     page.locator('#steps [data-go="4"]').click();page.click('#lockAction');page.wait_for_selector('#content button[data-go="5"]')
     assert call(page,base+'/validation',{},'POST')['status']==400
-    page.locator('#steps [data-go="5"]').click();page.evaluate('window.decodedImages=0');page.click('#testAction')
+    page.locator('#steps [data-go="5"]').click()
+    assert page.locator('#testVisualization').count()==0, 'Test images must remain sealed before evaluation'
+    page.evaluate('window.decodedImages=0');page.click('#testAction')
     completed=wait_job(page,base,'test');assert completed['phase']=='tested',completed.get('job')
     page.wait_for_selector('a[href$="SmartSort_Results.zip"]',timeout=15000)
     assert page.evaluate('window.decodedImages')==len(parts[2])
     state=call(page,base)['data'];assert state['phase']=='tested'
+    verify_gallery(page,state)
     assert call(page,base+'/colab/export',metadata['settings'],'POST')['status']==400
     assert call(page,base+'/return-to-labeling',{},'POST')['status']==400
     with page.expect_download() as downloaded:page.locator('a[href$="SmartSort_Results.zip"]').click()
