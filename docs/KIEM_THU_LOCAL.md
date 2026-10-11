@@ -4,7 +4,7 @@ Ngày kiểm thử: 11/10/2026. Đã chạy giao diện bằng Microsoft Edge he
 
 ## Luồng Colab mới và Docker/Railway
 
-- Bốn test trạng thái/hosting đã đạt: ảnh/nhãn, chia dữ liệu, khóa test, mã lớp, healthcheck và tắt train local trên cấu hình hosting.
+- Năm test trạng thái/hosting đã đạt: ảnh/nhãn, chia dữ liệu, khóa test, mã lớp, healthcheck và tắt train local trên cấu hình hosting.
 - `tests/verify_colab_bridge.py` đã chạy mô hình thật: gói xuất chỉ chứa train; trainer lưu checkpoint mỗi epoch; gói sai phiên hoặc có file ngoài định dạng bị từ chối; validation chỉ khởi tạo dataset validation, không khởi tạo test; khóa mô hình rồi mới chạy test và xuất ZIP.
 - `tests/verify_colab_browser.py` đã xác minh bằng Edge: tải gói train → nhập gói mô hình → bấm validation → chốt → test. Không có lỗi JavaScript.
 - Hai kiểm thử bridge dùng trainer chạy CPU với `require_cuda=False` **chỉ để xác minh phần mềm**; tiêu chí min-F1/min-recall đặt 0 trong fixture để kiểm tra luồng, không phải mục tiêu của bài học hay bằng chứng chất lượng mô hình. Mặc định của sản phẩm vẫn 0.80/0.60, notebook người dùng yêu cầu CUDA.
@@ -38,7 +38,7 @@ Hướng dẫn cấu hình volume, mã lớp và domain: [COLAB_VA_DEPLOY_RAILWA
 - Đã test: không sửa dữ liệu/chọn lại cấu hình; gọi test trả kết quả cũ.
 - Test thất bại/ngắt: chỉ được thử lại mô hình đã chốt, không quay lại tuning.
 
-Ba bài kiểm tra tự động trong `tests/test_workflow.py` đã đạt, kiểm tra nhập ảnh không suy ra nhãn, ảnh trùng/hỏng, chia không giao nhau, khóa nhãn/test và validation gate. Test này dùng mô phỏng huấn luyện để tập trung vào ranh giới trạng thái; kiểm thử trình duyệt nêu trên dùng mô hình thật.
+Năm bài kiểm tra tự động trong `tests/test_workflow.py` đã đạt, kiểm tra nhập ảnh không suy ra nhãn, ảnh trùng/hỏng, chia không giao nhau, khóa nhãn/test và validation gate. Test này dùng mô phỏng huấn luyện để tập trung vào ranh giới trạng thái; kiểm thử trình duyệt nêu trên dùng mô hình thật.
 
 ## Tái chạy
 
@@ -54,3 +54,9 @@ python tests/verify_browser.py
 ```
 
 Script trình duyệt mặc định dùng đường dẫn Microsoft Edge trên Windows và ZIP mẫu trong repo. Screenshot/log lưu ở `tests/runtime/` (Git ignore). Các nhãn được lưu tại `.smartsort/`; script tạo một phiên kiểm thử mới, không sửa phiên người học đang dùng. Bản chia dựa trên manifest phiên, nên số đo giữa các phiên mới có thể thay đổi.
+
+## Bổ sung kiểm thử deploy
+
+- Giới hạn số ảnh, chống trùng khi đã đạt giới hạn, giới hạn dung lượng upload, số phiên và giải phóng worker lock khi khởi tạo lỗi đã được kiểm tra.
+- Tái chạy bridge mô hình thật và trình duyệt sau thay đổi: đạt luồng train-only → import → validation → lock → test.
+- Workflow GitHub Actions build Docker thực tế và kiểm tra HTTP, suy luận CPU, volume qua việc thay container. Xem kết quả mới nhất tại [Actions](https://github.com/buide03/smartsort-colab-lab/actions).

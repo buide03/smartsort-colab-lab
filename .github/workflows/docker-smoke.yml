@@ -21,7 +21,7 @@ jobs:
         run: |
           docker volume create smartsort_ci_data
           docker run -d --name smartsort-ci -p 18000:8000 -e SMARTSORT_CLASSROOM_PASSWORD=ci-password -v smartsort_ci_data:/data smartsort:ci
-          curl --fail --retry 30 --retry-delay 2 --retry-connrefused http://localhost:18000/healthz
+          curl --fail --retry 30 --retry-delay 2 --retry-all-errors http://localhost:18000/healthz
       - name: Verify CPU inference dependencies
         run: >-
           docker exec smartsort-ci python -c
@@ -32,7 +32,7 @@ jobs:
         run: |
           docker rm -f smartsort-ci
           docker run -d --name smartsort-ci -p 18000:8000 -e SMARTSORT_CLASSROOM_PASSWORD=ci-password -v smartsort_ci_data:/data smartsort:ci
-          curl --fail --retry 30 --retry-delay 2 --retry-connrefused http://localhost:18000/healthz
+          curl --fail --retry 30 --retry-delay 2 --retry-all-errors http://localhost:18000/healthz
           python tests/container_smoke.py check
       - name: Container logs
         if: always()
