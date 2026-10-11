@@ -60,3 +60,7 @@ Script trình duyệt mặc định dùng đường dẫn Microsoft Edge trên W
 - Giới hạn số ảnh, chống trùng khi đã đạt giới hạn, giới hạn dung lượng upload, số phiên và giải phóng worker lock khi khởi tạo lỗi đã được kiểm tra.
 - Tái chạy bridge mô hình thật và trình duyệt sau thay đổi: đạt luồng train-only → import → validation → lock → test.
 - Workflow GitHub Actions build Docker thực tế và kiểm tra HTTP, suy luận CPU, volume qua việc thay container. Xem kết quả mới nhất tại [Actions](https://github.com/buide03/smartsort-colab-lab/actions).
+
+## Oracle ARM64 và HTTPS
+
+[Workflow đã đạt trên x86_64 và ARM64](https://github.com/buide03/smartsort-colab-lab/actions/runs/38150532128): Docker build, CPU inference, classroom HTTP workflow, cấu hình Compose Oracle, proxy Caddy HTTPS với chứng chỉ nội bộ, yêu cầu mã lớp qua proxy và lưu dữ liệu khi thay container. Bash syntax của installer/deploy/backup đạt. Chưa có tài khoản/VM Oracle để kiểm tra cài Ubuntu, backup trên VM, chứng chỉ public và tải 40 học sinh.

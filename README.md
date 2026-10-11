@@ -1,6 +1,6 @@
 > **Oracle Always Free:** bản Docker có cấu hình ARM64, lưu trên ổ VM và HTTPS Caddy. Xem [hướng dẫn đăng ký, tạo VM và deploy](docs/DEPLOY_ORACLE.md).
 
-> **Deploy cho lớp học:** dùng Railway + Docker, volume `/data`, train bằng Colab GPU; học sinh chỉ cần URL web. Xem [hướng dẫn deploy và kiểm tra](docs/COLAB_VA_DEPLOY_RAILWAY.md). Workflow [Docker deployment checks](https://github.com/buide03/smartsort-colab-lab/actions) kiểm tra image và dữ liệu sau khi restart.
+> **Phương án Railway:** dùng Railway + Docker, volume `/data`, train bằng Colab GPU; học sinh chỉ cần URL web. Xem [hướng dẫn deploy và kiểm tra](docs/COLAB_VA_DEPLOY_RAILWAY.md). Workflow [Docker deployment checks](https://github.com/buide03/smartsort-colab-lab/actions) kiểm tra image và dữ liệu sau khi restart.
 
 # SmartSort Classroom — huấn luyện, chốt mô hình và đánh giá test
 

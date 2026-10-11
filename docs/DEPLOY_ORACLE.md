@@ -129,6 +129,6 @@ Không xóa VM/boot volume/data directory khi còn cần dữ liệu. `docker co
 
 ## 7. Trạng thái triển khai
 
-Repo có workflow **Docker deployment checks**, chạy trên cả x86_64 và ARM64: build CPU image, suy luận EfficientNet, HTTP workflow, Caddy HTTPS proxy và dữ liệu qua việc thay container. Xem [Actions](https://github.com/buide03/smartsort-colab-lab/actions) và đợi các job xanh.
+Repo có workflow **Docker deployment checks**, chạy trên cả x86_64 và ARM64: build CPU image, suy luận EfficientNet, HTTP workflow, Caddy HTTPS proxy và dữ liệu qua việc thay container. Cả hai job đã đạt: [kết quả kiểm tra ARM64 và x86](https://github.com/buide03/smartsort-colab-lab/actions/runs/38150532128). HTTPS trong CI dùng chứng chỉ nội bộ của Caddy; chưa xác minh cấp chứng chỉ public cho domain thật trên Oracle. Script cài đặt/deploy/backup đã kiểm tra cú pháp Bash; việc cài mới Ubuntu và sao lưu thực tế trên VM cần xác minh khi VM có sẵn.
 
 Đây là bộ cấu hình sẵn để triển khai; chưa có VM Oracle hoặc URL public thật khi giáo viên chưa tạo tài khoản/VM. Sau khi tạo, cung cấp IP public, username SSH, đường dẫn private key trên máy giáo viên và hostname DNS để tiếp tục triển khai trực tiếp. Không gửi nội dung private key vào chat.
