@@ -4,7 +4,7 @@
 
 ## Chạy giao diện local
 
-Hướng dẫn đầy đủ cho người mới: **[Clone repo → tạo môi trường → cài đặt → chạy](docs/CAI_DAT_VA_CHAY.md)**. Repo private yêu cầu tài khoản được cấp quyền trước khi clone.
+Hướng dẫn đầy đủ cho người mới: **[Clone repo → tạo môi trường → cài đặt → chạy](docs/CAI_DAT_VA_CHAY.md)**. Repo public; người dùng có thể clone mà không cần được cấp quyền GitHub.
 
 Chạy nhanh trên Windows PowerShell (CPU):
 
@@ -56,7 +56,7 @@ Lab dùng EfficientNet-B0 pretrained ImageNet, huấn luyện classifier ba lớ
 ## Chạy trên Google Colab
 
 1. Tải [notebook](SmartSort_Lab/SmartSort_Colab_Lab.ipynb) và [ZIP dữ liệu chia sẵn](SmartSort_Lab/SmartSort_Data_Split.zip).
-2. Mở https://colab.research.google.com/ → **File → Upload notebook**. Repo riêng tư có thể yêu cầu cấp quyền GitHub khi dùng nút Colab; tải/upload notebook là cách thay thế.
+2. Mở notebook bằng nút Colab ở trên, hoặc mở https://colab.research.google.com/ → **File → Upload notebook**.
 3. Chọn **Runtime → Change runtime type → T4 GPU**, rồi **Run all**.
 4. Khi được hỏi, upload `SmartSort_Data_Split.zip`. Cũng có thể dùng [ZIP gốc](SmartSort_Lab/SmartSort_Dataset_Original.zip); notebook tự chia validation theo cùng seed.
 5. Kết thúc, tải `SmartSort_Results.zip` chứa báo cáo, biểu đồ, dự đoán và checkpoint.

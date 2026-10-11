@@ -23,7 +23,7 @@ python --version
 
 Trên Linux/macOS, lệnh Python thường là `python3 --version`.
 
-Repo được tạo ở chế độ **private**. Người khác phải được chủ repo cấp quyền truy cập và đăng nhập đúng tài khoản GitHub trước khi clone. Có đường link chưa đồng nghĩa có quyền truy cập. Nếu muốn dùng repo riêng tư trong lớp, chủ repo thêm học viên vào **Settings → Collaborators**; không cần đổi repo sang public. Xem [hướng dẫn clone của GitHub](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository).
+Repo hiện ở chế độ **public**. Người dùng có thể clone để chạy mà không cần đăng nhập GitHub hoặc được cấp quyền riêng. Quyền ghi/push vẫn dành cho chủ repo và cộng tác viên được cấp quyền. Xem [hướng dẫn clone của GitHub](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository).
 
 ## 2. Clone repo
 
@@ -148,7 +148,7 @@ Sau đó cài lại `requirements.txt` bằng Python của `.venv` và khởi đ
 | Hiện tượng | Cách xử lý |
 |---|---|
 | `git` hoặc `python` không nhận diện | Cài Git/Python, kiểm tra PATH, mở lại terminal. Windows có Python Launcher thì thử `py --version`. |
-| Clone báo `Repository not found` / lỗi quyền | Kiểm tra URL, đăng nhập đúng tài khoản và quyền truy cập repo private. |
+| Clone báo `Repository not found` / lỗi kết nối | Kiểm tra URL và kết nối GitHub; repo này public, không cần đăng nhập để clone. |
 | Không tìm thấy `requirements.txt` / `run_local.py` | Chạy `cd smartsort-colab-lab` trước, kiểm tra đúng thư mục repo. |
 | `No module named ...` | Cài requirements bằng chính Python `.venv` dùng để chạy, không trộn môi trường. |
 | PowerShell chặn `Activate.ps1` | Dùng trực tiếp `.\.venv\Scripts\python.exe` như hướng dẫn, không cần activate. |
