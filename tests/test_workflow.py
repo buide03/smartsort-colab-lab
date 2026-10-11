@@ -65,6 +65,27 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(self.client.put(self.base+'/labels',json={'ids':[state['images'][0]['id']],'label':'paper'}).status_code,400)
         self.assertEqual(self.client.post(self.base+'/lock',json={'trial_id':'trial_1'}).status_code,400)
 
+    def test_hosting_quotas_and_worker_recovery(self):
+        with patch.dict(os.environ, {'SMARTSORT_MAX_IMAGES':'1'}):
+            first=self.client.post(self.base+'/images',files={'files':('one.png',image_bytes(1),'image/png')})
+            self.assertEqual(first.json()['added'],1)
+            duplicate=self.client.post(self.base+'/images',files={'files':('copy.png',image_bytes(1),'image/png')})
+            self.assertEqual(duplicate.json()['duplicates'],1)
+            extra=self.client.post(self.base+'/images',files={'files':('two.png',image_bytes(2),'image/png')})
+            self.assertEqual(extra.json()['added'],0)
+            self.assertEqual(len(extra.json()['rejected']),1)
+            self.assertEqual(len(self.state()['images']),1)
+        with patch.dict(os.environ, {'SMARTSORT_UPLOAD_LIMIT_MB':'1'}):
+            response=self.client.post(self.base+'/images',files={'files':('large.png',b'x'*(1024*1024+1),'image/png')})
+            self.assertEqual(response.status_code,400)
+        with patch.dict(os.environ, {'SMARTSORT_MAX_SESSIONS':'0'}):
+            self.assertEqual(self.client.post('/api/sessions',json={}).status_code,400)
+        from smartsort_app.server import start_job,WORKER_LOCK
+        with patch.object(store,'load',side_effect=ValueError('missing')):
+            with self.assertRaises(ValueError):
+                start_job(self.session['id'],'validation',lambda *_:None)
+        self.assertFalse(WORKER_LOCK.locked())
+
     def test_hosting_access_and_train_only_export(self):
         self.prepare()
         with patch.dict(os.environ,{'SMARTSORT_ALLOW_LOCAL_TRAIN':'false'}):

@@ -6,3 +6,6 @@ SmartSort_Lab/smoke_runtime/
 .venv/
 .pytest_cache/
 tests/runtime/
+.env
+.env.*
+!.env.example

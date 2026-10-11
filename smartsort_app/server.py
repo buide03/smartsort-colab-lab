@@ -14,6 +14,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+from starlette.concurrency import run_in_threadpool
 
 from . import store
 
@@ -89,12 +90,16 @@ def idle(session):
 def start_job(session_id, kind, operation):
     if not WORKER_LOCK.acquire(blocking=False):
         raise ValueError('Đang có một tác vụ huấn luyện/kiểm thử khác trên máy. Hãy chờ hoàn tất.')
-    with store.LOCK:
-        s = store.load(session_id)
-        if kind == 'train':
-            s.update({'training': None, 'selected': None, 'phase': 'split'})
-        s['job'] = {'kind': kind, 'status': 'running', 'progress': 0, 'message': 'Đang khởi tạo...', 'live': None}
-        store.save(s)
+    try:
+        with store.LOCK:
+            s = store.load(session_id)
+            if kind == 'train':
+                s.update({'training': None, 'selected': None, 'phase': 'split'})
+            s['job'] = {'kind': kind, 'status': 'running', 'progress': 0, 'message': 'Đang khởi tạo...', 'live': None}
+            store.save(s)
+    except BaseException:
+        WORKER_LOCK.release()
+        raise
 
     def progress(percent, message, live=None):
         with store.LOCK:
@@ -141,6 +146,7 @@ def health():
 @app.get('/api/config')
 def app_config():
     return {'allow_local_train':os.environ.get('SMARTSORT_ALLOW_LOCAL_TRAIN','true').lower()=='true',
+            'upload_limit_mb':int(os.environ.get('SMARTSORT_UPLOAD_LIMIT_MB','64')),
             'colab_notebook':'https://colab.research.google.com/github/buide03/smartsort-colab-lab/blob/main/colab/SmartSort_Train_Colab.ipynb'}
 
 
@@ -159,12 +165,14 @@ def get_session(session_id: str):
 async def upload_images(session_id: str, files: list[UploadFile] = File(...)):
     uploads = []
     total = 0
+    limit_mb=int(os.environ.get('SMARTSORT_UPLOAD_LIMIT_MB','64'))
+    limit_bytes=limit_mb*1024*1024
     for file in files:
-        data = await file.read(256 * 1024 * 1024 + 1)
+        data = await file.read(limit_bytes-total+1)
         await file.close()
         total += len(data)
-        if total > 256 * 1024 * 1024:
-            raise ValueError('Mỗi lần tải tối đa 256 MB; có thể tải nhiều lượt.')
+        if total > limit_bytes:
+            raise ValueError(f'Mỗi lần tải tối đa {limit_mb} MB; có thể tải nhiều lượt.')
         uploads.append((file.filename or 'image', data))
     with store.LOCK:
         s = store.load(session_id)
@@ -406,17 +414,25 @@ async def predict_image(session_id: str, file: UploadFile = File(...)):
         if s['phase'] != 'tested':
             raise ValueError('Hoàn thành test trước khi thử ảnh mới.')
     data = await file.read(store.MAX_IMAGE_BYTES+1)
+    await file.close()
     image = store.rgb_image(data)
-    from .training import selected_model, transforms, device
-    import torch
-    model = selected_model(s).to(device()).eval()
-    _, transform = transforms()
-    with torch.inference_mode():
-        p = model(transform(image).unsqueeze(0).to(next(model.parameters()).device)).softmax(1)[0].cpu().numpy()
-    i = int(p.argmax())
-    return {'label': store.CLASSES[i], 'name':store.CLASS_NAMES[store.CLASSES[i]], 'confidence':float(p[i]),
-            'decision':store.CLASS_NAMES[store.CLASSES[i]] if p[i]>=s['selected']['criteria']['confidence_threshold'] else 'Cần kiểm tra',
-            'probabilities':{c:float(p[j]) for j,c in enumerate(store.CLASSES)}}
+    if not WORKER_LOCK.acquire(blocking=False):
+        raise ValueError('Server đang validation/test hoặc nhận diện ảnh khác. Chờ tác vụ đó hoàn tất.')
+    def inference():
+        from .training import selected_model, transforms, device
+        import torch
+        model = selected_model(s).to(device()).eval()
+        _, transform = transforms()
+        with torch.inference_mode():
+            p = model(transform(image).unsqueeze(0).to(next(model.parameters()).device)).softmax(1)[0].cpu().numpy()
+        i = int(p.argmax())
+        return {'label': store.CLASSES[i], 'name':store.CLASS_NAMES[store.CLASSES[i]], 'confidence':float(p[i]),
+                'decision':store.CLASS_NAMES[store.CLASSES[i]] if p[i]>=s['selected']['criteria']['confidence_threshold'] else 'Cần kiểm tra',
+                'probabilities':{c:float(p[j]) for j,c in enumerate(store.CLASSES)}}
+    try:
+        return await run_in_threadpool(inference)
+    finally:
+        WORKER_LOCK.release()
 
 
 # An interrupted job is not reported as still running after a process restart.

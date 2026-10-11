@@ -1,0 +1,39 @@
+name: Docker deployment checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build CPU server image
+        run: docker build -t smartsort:ci .
+      - name: Start with persistent volume and classroom password
+        run: |
+          docker volume create smartsort_ci_data
+          docker run -d --name smartsort-ci -p 18000:8000 -e SMARTSORT_CLASSROOM_PASSWORD=ci-password -v smartsort_ci_data:/data smartsort:ci
+          curl --fail --retry 30 --retry-delay 2 --retry-connrefused http://localhost:18000/healthz
+      - name: Verify CPU inference dependencies
+        run: >-
+          docker exec smartsort-ci python -c
+          "import torch; from smartsort_app.training import make_model; m=make_model(pretrained=False).eval(); y=m(torch.zeros(1,3,224,224)); assert y.shape==(1,3); assert not torch.cuda.is_available(); print('CPU inference OK')"
+      - name: Verify classroom workflow
+        run: python tests/container_smoke.py create
+      - name: Restart container and verify persisted data
+        run: |
+          docker rm -f smartsort-ci
+          docker run -d --name smartsort-ci -p 18000:8000 -e SMARTSORT_CLASSROOM_PASSWORD=ci-password -v smartsort_ci_data:/data smartsort:ci
+          curl --fail --retry 30 --retry-delay 2 --retry-connrefused http://localhost:18000/healthz
+          python tests/container_smoke.py check
+      - name: Container logs
+        if: always()
+        run: docker logs smartsort-ci || true

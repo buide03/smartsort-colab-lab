@@ -1,3 +1,5 @@
+> **Deploy cho lớp học:** dùng Railway + Docker, volume `/data`, train bằng Colab GPU; học sinh chỉ cần URL web. Xem [hướng dẫn deploy và kiểm tra](docs/COLAB_VA_DEPLOY_RAILWAY.md). Workflow [Docker deployment checks](https://github.com/buide03/smartsort-colab-lab/actions) kiểm tra image và dữ liệu sau khi restart.
+
 # SmartSort Classroom — huấn luyện, chốt mô hình và đánh giá test
 
 **Sản phẩm chính: giao diện local dùng dạy học với ảnh chưa có nhãn.** Backend Python/FastAPI, giao diện HTML/CSS/JavaScript, mô hình EfficientNet-B0. Notebook Colab cũ bên dưới được giữ nguyên làm ví dụ với dữ liệu đã có nhãn.

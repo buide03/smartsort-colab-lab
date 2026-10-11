@@ -48,6 +48,9 @@ def save(session):
 
 def create(title=''):
     with LOCK:
+        limit=int(os.environ.get('SMARTSORT_MAX_SESSIONS','200'))
+        if sum(1 for _ in ROOT.glob('*/session.json'))>=limit:
+            raise ValueError(f'Đã đạt giới hạn {limit} phiên trên server. Giáo viên cần sao lưu/dọn phiên hoặc tăng giới hạn.')
         session = {'id': uuid.uuid4().hex, 'title': title.strip()[:100] or 'Bài thực hành mới',
                    'created_at': now(), 'phase': 'labeling', 'images': [], 'splits': None,
                    'training': None, 'selected': None, 'results': None, 'job': None}
@@ -92,10 +95,23 @@ def add_image(session, filename, data):
     pixel_hash = hashlib.sha256(str(image.size).encode() + image.tobytes()).hexdigest()
     if any(r['pixel_hash'] == pixel_hash for r in session['images']):
         return False
+    limit=int(os.environ.get('SMARTSORT_MAX_IMAGES','1000'))
+    if len(session['images'])>=limit:
+        raise ValueError(f'Mỗi phiên tối đa {limit} ảnh; hãy chia thành bài thực hành nhỏ hơn.')
     image_id = uuid.uuid4().hex
     d = session_dir(session['id']) / 'images'
     d.mkdir(exist_ok=True)
-    image.save(d / f'{image_id}.png')
+    buffer=io.BytesIO()
+    image.save(buffer,format='PNG')
+    encoded=buffer.getvalue()
+    existing=session.get('image_bytes')
+    if existing is None:
+        existing=sum(p.stat().st_size for p in d.glob('*.png'))
+    max_bytes=int(os.environ.get('SMARTSORT_MAX_IMAGE_STORAGE_MB','512'))*1024*1024
+    if existing+len(encoded)>max_bytes:
+        raise ValueError('Dung lượng ảnh của phiên đã đạt giới hạn server.')
+    (d/f'{image_id}.png').write_bytes(encoded)
+    session['image_bytes']=existing+len(encoded)
     # Filename is displayed as data; folder names and ZIP instructions are not labels.
     session['images'].append({'id': image_id, 'filename': filename.replace('\\', '/').split('/')[-1][:180],
                               'label': None, 'pixel_hash': pixel_hash,

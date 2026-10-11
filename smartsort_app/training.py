@@ -1,6 +1,7 @@
 """Train on train, choose with validation, freeze, then evaluate a sealed test."""
 import csv
 import json
+import os
 import random
 import time
 import zipfile
@@ -61,7 +62,7 @@ def make_model(dropout=.2, pretrained=True):
 def device():
     result = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if result.type == 'cpu':
-        torch.set_num_threads(4)
+        torch.set_num_threads(max(1,min(8,int(os.environ.get('SMARTSORT_CPU_THREADS','4')))))
     return result
 
 

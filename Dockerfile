@@ -1,7 +1,7 @@
 FROM python:3.12-slim
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 PIP_NO_CACHE_DIR=1 \
     SMARTSORT_APP_DATA=/data/sessions SMARTSORT_ALLOW_LOCAL_TRAIN=false \
-    OMP_NUM_THREADS=2
+    OMP_NUM_THREADS=2 SMARTSORT_CPU_THREADS=2
 WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 \
     && rm -rf /var/lib/apt/lists/*

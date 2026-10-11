@@ -30,6 +30,11 @@ Colab lưu classifier từng epoch; học sinh chạy validation trên web để
 | `SMARTSORT_ALLOW_LOCAL_TRAIN` | `false` |
 | `PORT` | `8000` |
 | `SMARTSORT_CLASSROOM_PASSWORD` | Mã lớp do giáo viên đặt, chia sẻ riêng cho học sinh |
+| `SMARTSORT_CPU_THREADS` | `2` |
+| `SMARTSORT_UPLOAD_LIMIT_MB` | `64` (mỗi lượt tải ảnh) |
+| `SMARTSORT_MAX_IMAGES` | `1000` (mỗi phiên) |
+| `SMARTSORT_MAX_SESSIONS` | `200` (toàn server) |
+| `SMARTSORT_MAX_IMAGE_STORAGE_MB` | `512` (ảnh PNG mỗi phiên) |
 
 5. Giữ **1 replica / 1 worker** vì hàng đợi tác vụ và file phiên nằm cùng process/volume. Không thêm lệnh chạy nhiều worker. Entrypoint có sẵn `python serve.py`; nếu Railway yêu cầu start command, dùng lệnh này.
 6. Deploy và chờ healthcheck **`/healthz`** đạt. Lần build đầu cài CPU PyTorch có thể mất thời gian; chưa có URL dùng được cho đến khi dịch vụ deploy thành công.
@@ -72,18 +77,34 @@ Sau test không nhập mô hình mới, chạy validation lại hoặc train l�
 
 Cài Docker Desktop/Engine và khởi động engine. Trong thư mục repo:
 
+Sao chép `.env.example` thành `.env`, đặt mã lớp trong `SMARTSORT_CLASSROOM_PASSWORD`. File `.env` được bỏ qua bởi Git và Docker build context. Trên Railway, nhập biến trong **Variables**; không upload `.env` lên repo.
+
+Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Linux/macOS:
+
+```bash
+cp .env.example .env
+```
+
+Sau khi sửa `.env`:
+
 ```bash
 docker compose up --build -d
 docker compose logs -f
 ```
 
-Mở `http://localhost:8000`. Nếu cổng 8000 đang do bản Python local dùng, dừng bản đó hoặc đổi port phía host trong `compose.yaml` thành `8001:8000` rồi mở port 8001.
+Mở `http://localhost:8000`. Nếu cổng 8000 đang do bản Python local dùng, dừng bản đó hoặc đặt `SMARTSORT_HTTP_PORT=8001` trong `.env` rồi mở `http://localhost:8001`. Biến này chỉ đổi cổng máy chạy Docker Compose; Railway vẫn dùng `PORT=8000`.
 
 ```bash
 docker compose down
 ```
 
-Lệnh trên dừng container và giữ volume. Để giữ dữ liệu bài học, **không thêm `-v`**. Volume `smartsort_data` lưu phiên. Bản Docker tắt train local; validation/test dùng CPU. Muốn mã lớp trên máy, thêm `SMARTSORT_CLASSROOM_PASSWORD` vào environment của dịch vụ bằng cấu hình riêng, không commit mật khẩu.
+Lệnh trên dừng container và giữ volume. Để giữ dữ liệu bài học, **không thêm `-v`**. Volume `smartsort_data` lưu phiên. Bản Docker tắt train local; validation/test dùng CPU. Mã lớp trên máy được lấy từ `.env`; sau khi đổi mã, chạy lại `docker compose up -d`.
 
 ## 4. Vận hành
 
@@ -93,6 +114,18 @@ Lệnh trên dừng container và giữ volume. Để giữ dữ liệu bài h�
 - Học sinh không cần cài Python hoặc Docker để dùng URL web. Người train trên Colab cần tài khoản Google và runtime GPU.
 - Healthcheck không yêu cầu mã lớp; các trang/API còn lại dùng mã lớp nếu biến password được đặt.
 - Không có migration tài khoản/hạ tầng Google Cloud trong bản này. Nếu chuyển Google Cloud, cần thiết kế lưu trữ bền vững phù hợp; file phiên không được giữ trên filesystem tạm của container sau khi mất instance.
+
+## 5. Kiểm tra trước khi phát URL cho học sinh
+
+1. Mở `https://<domain-thật>/healthz`: phải thấy `{"status":"ok"}`.
+2. Mở trang chính bằng cửa sổ ẩn danh: phải yêu cầu username `class` và mã lớp đã đặt.
+3. Tạo phiên thử, tải tối thiểu 10 ảnh khác nhau mỗi lớp, gán nhãn, chia dữ liệu và tải gói train Colab.
+4. Hoàn thành một vòng Colab → nhập ZIP → validation → chốt → test. Theo dõi RAM khi validation; điều chỉnh số ảnh/epoch/cấu hình nếu máy thiếu RAM.
+5. Redeploy dịch vụ, mở lại phiên thử và kiểm tra dữ liệu còn nguyên. Nếu mất phiên, kiểm tra volume `/data` và `SMARTSORT_APP_DATA=/data/sessions` trước khi cho lớp sử dụng.
+
+Giới hạn ảnh/dung lượng ở trên hỗ trợ bài thực hành nhỏ; tổng volume còn chứa checkpoint, gói ZIP và báo cáo, nên không được hiểu 512 MB là tổng dung lượng server. Ảnh vượt hạn mức bị từ chối và hiện lý do; có thể tải nhiều lượt dưới 64 MB. Khi đạt 200 phiên, giáo viên cần sao lưu/dọn phiên trên volume hoặc tăng biến giới hạn. Dùng ảnh vừa phải để giảm bộ nhớ giải mã ảnh.
+
+Repo có workflow **Docker deployment checks** trong tab **Actions**: build image CPU, chạy HTTP kiểm tra upload/gán nhãn/chia tập/xuất train, kiểm tra suy luận CPU và khởi động lại container với volume để kiểm tra dữ liệu bền vững. Đợi workflow xanh trước khi deploy bản mới. Kiểm tra này không thay cho lần kiểm tra dịch vụ Railway thật ở các bước trên.
 
 ## Trạng thái xác minh
 

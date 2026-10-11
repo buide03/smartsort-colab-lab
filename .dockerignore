@@ -10,3 +10,6 @@ local_runtime
 *.zip
 docs
 colab
+.github
+.env
+.env.*

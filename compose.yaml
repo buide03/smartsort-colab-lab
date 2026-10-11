@@ -2,11 +2,17 @@ services:
   smartsort:
     build: .
     ports:
-      - "8000:8000"
+      - "${SMARTSORT_HTTP_PORT:-8000}:8000"
     environment:
       PORT: "8000"
       SMARTSORT_APP_DATA: /data/sessions
       SMARTSORT_ALLOW_LOCAL_TRAIN: "false"
+      SMARTSORT_CPU_THREADS: "${SMARTSORT_CPU_THREADS:-2}"
+      SMARTSORT_CLASSROOM_PASSWORD: "${SMARTSORT_CLASSROOM_PASSWORD:-}"
+      SMARTSORT_UPLOAD_LIMIT_MB: "${SMARTSORT_UPLOAD_LIMIT_MB:-64}"
+      SMARTSORT_MAX_IMAGES: "${SMARTSORT_MAX_IMAGES:-1000}"
+      SMARTSORT_MAX_SESSIONS: "${SMARTSORT_MAX_SESSIONS:-200}"
+      SMARTSORT_MAX_IMAGE_STORAGE_MB: "${SMARTSORT_MAX_IMAGE_STORAGE_MB:-512}"
     volumes:
       - smartsort_data:/data
     restart: unless-stopped
