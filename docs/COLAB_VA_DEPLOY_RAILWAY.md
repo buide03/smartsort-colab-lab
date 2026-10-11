@@ -129,4 +129,4 @@ Repo có workflow **Docker deployment checks** trong tab **Actions**: build imag
 
 ## Trạng thái xác minh
 
-Code Colab, kiểm tra gói, validation và test được xác minh bằng mô hình thật trên CPU ở môi trường phát triển, với chế độ CPU chỉ dành cho script kiểm thử. Notebook dành cho người dùng vẫn yêu cầu CUDA. Không tuyên bố đã chạy hosted Colab GPU hoặc deploy Railway khi chưa thực hiện trong tài khoản tương ứng. Docker cần build thực tế bằng engine đang hoạt động; kiểm tra cú pháp/entrypoint không thay cho một lần build/deploy.
+Code Colab, kiểm tra gói, validation và test được xác minh bằng mô hình thật trên CPU ở môi trường phát triển, với chế độ CPU chỉ dành cho script kiểm thử. Notebook dành cho người dùng vẫn yêu cầu CUDA. Không tuyên bố đã chạy hosted Colab GPU hoặc deploy Railway khi chưa thực hiện trong tài khoản tương ứng. [Docker deployment checks đã đạt](https://github.com/buide03/smartsort-colab-lab/actions/runs/38147460812) trên runner Linux: build image, khởi động HTTP, xác thực, suy luận CPU, luồng dữ liệu và volume qua việc thay container. Dịch vụ Railway thật và hosted Colab GPU vẫn cần người dùng kiểm tra sau triển khai.

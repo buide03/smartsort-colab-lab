@@ -9,7 +9,7 @@ Ngày kiểm thử: 11/10/2026. Đã chạy giao diện bằng Microsoft Edge he
 - `tests/verify_colab_browser.py` đã xác minh bằng Edge: tải gói train → nhập gói mô hình → bấm validation → chốt → test. Không có lỗi JavaScript.
 - Hai kiểm thử bridge dùng trainer chạy CPU với `require_cuda=False` **chỉ để xác minh phần mềm**; tiêu chí min-F1/min-recall đặt 0 trong fixture để kiểm tra luồng, không phải mục tiêu của bài học hay bằng chứng chất lượng mô hình. Mặc định của sản phẩm vẫn 0.80/0.60, notebook người dùng yêu cầu CUDA.
 - Notebook mới hợp lệ theo nbformat và code cell biên dịch được. Chưa chạy trong hosted Colab GPU.
-- Dockerfile/Compose/entrypoint và Railway config được chuẩn bị; máy hiện không có Docker engine để build container thực tế. Chưa deploy Railway vì chưa có kết nối tài khoản được xác nhận; không có URL public đã xác minh.
+- Docker đã build và chạy thực tế bằng GitHub Actions: [Docker deployment checks đã đạt](https://github.com/buide03/smartsort-colab-lab/actions/runs/38147460812). Kiểm tra healthcheck, mã lớp, suy luận EfficientNet CPU, upload/gán nhãn/chia dữ liệu/xuất train và dữ liệu bền vững qua việc thay container đều đạt. Máy phát triển không có Docker engine; kiểm tra container thực hiện trên runner Linux. Chưa deploy Railway trong tài khoản người dùng, chưa có URL Railway được xác minh.
 
 Hướng dẫn cấu hình volume, mã lớp và domain: [COLAB_VA_DEPLOY_RAILWAY.md](COLAB_VA_DEPLOY_RAILWAY.md). Không dùng kết quả smoke test làm điểm đánh giá model cuối.
 
