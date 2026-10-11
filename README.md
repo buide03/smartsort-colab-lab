@@ -4,12 +4,32 @@
 
 ## Chạy giao diện local
 
+Hướng dẫn đầy đủ cho người mới: **[Clone repo → tạo môi trường → cài đặt → chạy](docs/CAI_DAT_VA_CHAY.md)**. Repo private yêu cầu tài khoản được cấp quyền trước khi clone.
+
+Chạy nhanh trên Windows PowerShell (CPU):
+
 ```powershell
-python -m pip install -r requirements.txt
-python run_local.py
+git clone https://github.com/buide03/smartsort-colab-lab.git
+cd smartsort-colab-lab
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe run_local.py
 ```
 
-Mở **http://127.0.0.1:8000**. Giữ cửa sổ Python mở; `Ctrl+C` để dừng. Windows cũng có thể chạy `powershell -ExecutionPolicy Bypass -File start_local.ps1`. Cổng khác: `python run_local.py --port 8001`.
+Mở **http://127.0.0.1:8000**. Giữ cửa sổ Python mở; `Ctrl+C` để dừng. Nếu đã tải ZIP local, bỏ hai lệnh clone/cd và mở terminal tại thư mục đã giải nén. Cổng khác: `.\.venv\Scripts\python.exe run_local.py --port 8001`.
+
+Linux/macOS:
+
+```bash
+git clone https://github.com/buide03/smartsort-colab-lab.git
+cd smartsort-colab-lab
+python3 -m venv .venv
+./.venv/bin/python -m pip install --upgrade pip
+./.venv/bin/python -m pip install -r requirements.txt
+./.venv/bin/python run_local.py
+```
 
 Python 3.10+, khuyến nghị 3.11/3.12; chạy được CPU, có CUDA thì dùng GPU. Lần đầu cần Internet để cài thư viện và tải trọng số ImageNet. Giao diện không dùng CDN; dữ liệu/nhãn/kết quả lưu tại `.smartsort/` và không push lên Git.
 
