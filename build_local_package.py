@@ -15,4 +15,4 @@ with zipfile.ZipFile(ROOT/'SmartSort_Local_App.zip','w',zipfile.ZIP_DEFLATED) as
         z.write(file, 'SmartSort_Local_App/'+file.relative_to(ROOT).as_posix())
 with zipfile.ZipFile(ROOT/'SmartSort_Local_App.zip') as z:
     assert z.testzip() is None
-print('Built SmartSort_Local_App.zip; extract, install requirements, run python run_local.py.')
+print('Built SmartSort_Local_App.zip; Browser Lab: python run_browser_lab.py (port 8001). Backend edition: python run_local.py.')

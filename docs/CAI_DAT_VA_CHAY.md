@@ -1,3 +1,5 @@
+> **Bản Render Static mới:** học sinh mở URL, không cài Python/PyTorch. Chạy local bằng `python run_browser_lab.py` tại http://127.0.0.1:8001/. Xem [hướng dẫn Browser Lab](DEPLOY_RENDER_STATIC.md). Các bước backend bên dưới dành cho bản Docker/Oracle/Railway.
+
 # Cài đặt SmartSort sau khi clone repo
 
 Hướng dẫn này dành cho người dùng mới, từ cài môi trường đến mở giao diện và thực hiện bài lab. Không cần Node.js, npm, Docker hoặc Google Colab để chạy bản local.

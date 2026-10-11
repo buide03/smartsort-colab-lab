@@ -77,3 +77,9 @@ Thời gian phụ thuộc CPU máy học sinh; chưa đo tải 40 người/40 th
 Notebook người dùng vẫn yêu cầu CUDA; chưa tuyên bố đã chạy hosted Colab GPU. Runtime browser CPU dùng ONNX Runtime Web/WASM một thread để chạy được trên static host mà không cần cấu hình cross-origin isolation. [Tài liệu ONNX Runtime Web](https://onnxruntime.ai/docs/tutorials/web/).
 
 Xem workflow **Static browser lab checks** tại [GitHub Actions](https://github.com/buide03/smartsort-colab-lab/actions). Trước khi phát URL, giáo viên hoàn thành một vòng train GPU thật và kiểm tra lưu/khôi phục trên URL Render.
+
+## Kết quả xác minh bản phát hành
+
+[Static browser lab checks đã đạt](https://github.com/buide03/smartsort-colab-lab/actions/runs/38153742707) trên Chromium/Linux; cùng luồng đạt trên Edge/Windows. Có 195 ảnh nhập chưa có nhãn; fixture gán nhãn tham chiếu để tự động hóa, chia 126/27/27 và bỏ qua 15 ảnh ngoài lớp. Validation decode đúng 27 ảnh validation, test decode đúng 27 ảnh test sau chốt. Gói sai request bị từ chối. Báo cáo ZIP, reload và backup/restore giữ nguyên kết quả; không lỗi JavaScript hay tràn ngang ở 390 px. Tiền xử lý sai khác tối đa khoảng 1.54e-7 so với Pillow trên các ảnh thử.
+
+Đây là kiểm thử chức năng, trainer chạy CPU và tiêu chí fixture bằng 0; không dùng điểm fixture để đánh giá chất lượng model. Trên Colab thật notebook yêu cầu GPU. Chưa tạo URL Render do người dùng chưa có tài khoản/kết nối Render.

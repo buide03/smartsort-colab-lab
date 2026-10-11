@@ -64,3 +64,7 @@ Script trình duyệt mặc định dùng đường dẫn Microsoft Edge trên W
 ## Oracle ARM64 và HTTPS
 
 [Workflow đã đạt trên x86_64 và ARM64](https://github.com/buide03/smartsort-colab-lab/actions/runs/38150532128): Docker build, CPU inference, classroom HTTP workflow, cấu hình Compose Oracle, proxy Caddy HTTPS với chứng chỉ nội bộ, yêu cầu mã lớp qua proxy và lưu dữ liệu khi thay container. Bash syntax của installer/deploy/backup đạt. Chưa có tài khoản/VM Oracle để kiểm tra cài Ubuntu, backup trên VM, chứng chỉ public và tải 40 học sinh.
+
+## Bản Render Static / Browser Lab
+
+[Workflow kiểm thử trình duyệt đã đạt](https://github.com/buide03/smartsort-colab-lab/actions/runs/38153742707). Chạy cùng test trên Edge Windows cũng đạt: tiền xử lý Pillow/bicubic, import gói sai request bị chặn, model ONNX thật, validation chỉ decode validation, test sau chốt, khóa tuning, tải báo cáo/model, IndexedDB qua reload, backup/restore và giao diện hẹp. Xem [hướng dẫn bản mới](DEPLOY_RENDER_STATIC.md). Chưa chạy hosted Colab GPU hoặc deploy trong tài khoản Render của người dùng; không coi fixture là đánh giá chất lượng model độc lập.
