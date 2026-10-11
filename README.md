@@ -1,3 +1,5 @@
+> **Bản miễn phí cho lớp học: Render Static Site + Colab GPU + validation/test trong trình duyệt.** Xem [hướng dẫn deploy và thao tác](docs/DEPLOY_RENDER_STATIC.md). Chạy thử bằng `python run_browser_lab.py`, mở http://127.0.0.1:8001/. Ảnh/phiên lưu trong trình duyệt, có ZIP sao lưu/khôi phục.
+
 > **Oracle Always Free:** bản Docker có cấu hình ARM64, lưu trên ổ VM và HTTPS Caddy. Xem [hướng dẫn đăng ký, tạo VM và deploy](docs/DEPLOY_ORACLE.md).
 
 > **Phương án Railway:** dùng Railway + Docker, volume `/data`, train bằng Colab GPU; học sinh chỉ cần URL web. Xem [hướng dẫn deploy và kiểm tra](docs/COLAB_VA_DEPLOY_RAILWAY.md). Workflow [Docker deployment checks](https://github.com/buide03/smartsort-colab-lab/actions) kiểm tra image và dữ liệu sau khi restart.

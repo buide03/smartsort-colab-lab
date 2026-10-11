@@ -1,0 +1,36 @@
+name: Static browser lab checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: browser-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Install verification dependencies
+        run: |
+          python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install numpy pillow onnx onnxruntime playwright nbformat
+          python -m playwright install --with-deps chromium
+      - name: Check generated static assets
+        run: |
+          python browser_lab/build_static.py
+          git diff --exit-code -- static_site
+          node --check static_site/app.js
+          node --check static_site/browser-engine.js
+      - name: Run real-model browser workflow
+        run: |
+          python run_browser_lab.py > /tmp/smartsort-static.log 2>&1 &
+          curl --fail --retry 20 --retry-delay 1 --retry-all-errors http://127.0.0.1:8001/
+          python -u -m tests.verify_static_browser

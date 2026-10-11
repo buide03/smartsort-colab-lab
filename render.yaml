@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: smartsort-browser-lab
+    runtime: static
+    buildCommand: test -f static_site/index.html
+    staticPublishPath: ./static_site
+    headers:
+      - path: /vendor/*.mjs
+        name: Content-Type
+        value: application/javascript
+      - path: /vendor/*.wasm
+        name: Content-Type
+        value: application/wasm
+      - path: /vendor/*
+        name: Cache-Control
+        value: public, max-age=86400
