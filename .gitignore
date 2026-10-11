@@ -2,3 +2,7 @@ local_runtime/
 __pycache__/
 SmartSort_Lab/verification.log
 SmartSort_Lab/smoke_runtime/
+.smartsort/
+.venv/
+.pytest_cache/
+tests/runtime/

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SmartSort · Phòng thực hành AI</title>
+  <link rel="stylesheet" href="/style.css">+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="SmartSort"><span class="brand-mark">S</span><span>SmartSort<small>PHÒNG THỰC HÀNH AI</small></span></a>
+    <div class="sidebar-label">BÀI HỌC</div>
+    <h2>Từ ảnh đến<br>một mô hình.</h2>
+    <p class="sidebar-intro">Nhựa. Giấy. Kim loại.<br>Học cách huấn luyện và đánh giá bằng dữ liệu của bạn.</p>
+    <nav id="steps" aria-label="Các bước thực hành"></nav>
+    <div class="sidebar-footer"><span class="live-dot"></span>Chạy trên máy của bạn<small>Ảnh và kết quả lưu cục bộ.</small></div>
+  </aside>
+  <main>
+    <header class="topbar"><div><span class="eyebrow">SMARTSORT CLASSROOM</span><span class="local-badge">LOCAL LAB</span></div><div class="session-tools"><select id="sessionPicker" aria-label="Chọn phiên học"></select><button class="button ghost" id="newSession">＋ Phiên mới</button></div></header>
+    <div id="jobBanner" class="job-banner hidden" role="status"></div>
+    <div id="content"></div>
+    <footer class="main-footer">EfficientNet-B0 · Transfer learning <span>Train → Validation → Chốt → Test</span></footer>
+  </main>
+  <div id="toast" role="status" class="toast hidden"></div>
+  <dialog id="imageDialog"><button class="dialog-close" onclick="this.closest('dialog').close()" aria-label="Đóng">×</button><img id="largeImage" alt="Ảnh đang xem"><p id="largeCaption"></p></dialog>
+  <dialog id="newDialog"><h2>Tạo phiên thực hành</h2><p>Mỗi phiên giữ riêng ảnh, nhãn, cấu hình và kết quả.</p><label>Tên bài thực hành<input id="newTitle" placeholder="Ví dụ: Nhóm 1 — Phân loại vật liệu" maxlength="100"></label><div class="dialog-actions"><button class="button ghost" id="cancelNew">Hủy</button><button class="button primary" id="confirmNew">Tạo phiên</button></div></dialog>
+  <script src="/app.js"></script>
+</body>
+</html>

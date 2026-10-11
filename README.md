@@ -1,4 +1,33 @@
-# SmartSort — Lab phân loại nhựa, giấy, kim loại trên Google Colab
+# SmartSort Classroom — huấn luyện, chốt mô hình và đánh giá test
+
+**Sản phẩm chính: giao diện local dùng dạy học với ảnh chưa có nhãn.** Backend Python/FastAPI, giao diện HTML/CSS/JavaScript, mô hình EfficientNet-B0. Notebook Colab cũ bên dưới được giữ nguyên làm ví dụ với dữ liệu đã có nhãn.
+
+## Chạy giao diện local
+
+```powershell
+python -m pip install -r requirements.txt
+python run_local.py
+```
+
+Mở **http://127.0.0.1:8000**. Giữ cửa sổ Python mở; `Ctrl+C` để dừng. Windows cũng có thể chạy `powershell -ExecutionPolicy Bypass -File start_local.ps1`. Cổng khác: `python run_local.py --port 8001`.
+
+Python 3.10+, khuyến nghị 3.11/3.12; chạy được CPU, có CUDA thì dùng GPU. Lần đầu cần Internet để cài thư viện và tải trọng số ImageNet. Giao diện không dùng CDN; dữ liệu/nhãn/kết quả lưu tại `.smartsort/` và không push lên Git.
+
+1. **Tải ảnh & gán nhãn:** mọi ảnh bắt đầu chưa có nhãn. Chọn Nhựa/Giấy/Kim loại hoặc Bỏ qua; có xem lớn, lọc ảnh, gán theo nhóm, tải CSV.
+2. **Chia ba tập:** mặc định 70/15/15 theo từng lớp; lưu seed/manifest, khóa nhãn và giữ kín ảnh test.
+3. **Huấn luyện & validation:** thử learning rate, xem learning curves, early stopping và checkpoint tốt nhất. Không đọc test.
+4. **Chốt cấu hình:** chọn cấu hình đạt tiêu chí validation đặt trước; lưu checkpoint, epoch, ngưỡng và hash bản chia.
+5. **Đánh giá test:** chỉ suy luận bằng checkpoint đã chốt; metrics từng lớp, confusion matrix, ảnh sai, nhận xét và ZIP báo cáo/mô hình.
+
+Mỗi bước có giải thích và câu hỏi thảo luận. Xem [hướng dẫn dạy học, kịch bản buổi học và rubric](docs/HUONG_DAN_DAY_HOC.md), [kiểm thử local](docs/KIEM_THU_LOCAL.md). Tải [gói local](SmartSort_Local_App.zip) nếu không dùng Git clone.
+
+Cần tối thiểu 10 ảnh khác nhau/lớp, khuyến nghị từ 50 ảnh/lớp. Ứng dụng không đoán nhãn từ thư mục/metadata, chỉ loại ảnh có pixel trùng hoàn toàn; ảnh gần giống/cùng vật thể cần kiểm tra thủ công. Bài toán phân loại toàn bộ ảnh, không phát hiện nhiều vật thể hay lớp unknown. Sau khi xem test và cải tiến, cần test mới độc lập.
+
+![Giao diện SmartSort Classroom](docs/assets/local-preview.png)
+
+Mã local: `smartsort_app/`, `run_local.py`, `start_local.ps1`. Kiểm tra: `pip install httpx`, rồi `python -m unittest discover -s tests -p test_workflow.py -v`. `tests/verify_browser.py` dùng Edge/Playwright và mô hình thật để kiểm thử toàn quy trình với nhãn tham chiếu làm fixture; ứng dụng không tự đọc nhãn đó.
+
+## Notebook Colab phiên bản trước
 
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/buide03/smartsort-colab-lab/blob/main/SmartSort_Lab/SmartSort_Colab_Lab.ipynb)
 
