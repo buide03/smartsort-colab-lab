@@ -86,7 +86,7 @@ try {
         Download-Checked "https://www.python.org/ftp/python/3.13.16/python-3.13.16-embed-$architecture.zip" $pythonZip $pythonHash
         Expand-Checked $pythonZip $runtime
     }
-    & $python -c 'import http.server, json; print("Python OK")'
+    & $python -c 'import http.server, json'
     if ($LASTEXITCODE -ne 0) { throw 'Python chua chay duoc. Kiem tra Windows va quyen chay phan mem cua nha truong.' }
     Write-Step '[3/4] Tai giao dien va mo hinh chay tren trinh duyet...'
     $bundleZip = Join-Path $downloads ([IO.Path]::GetFileName($manifest.bundle))

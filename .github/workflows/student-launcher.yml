@@ -1,0 +1,22 @@
+name: Windows student launcher checks
+on:
+  push:
+    branches: [main]
+    paths:
+      - start-student.ps1
+      - student/**
+      - run_browser_lab.py
+      - tests/verify_student_launcher.ps1
+      - .github/workflows/student-launcher.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - name: Cold installation and offline launch on Windows PowerShell
+        shell: powershell
+        run: .\tests\verify_student_launcher.ps1
