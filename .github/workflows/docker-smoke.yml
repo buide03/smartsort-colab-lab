@@ -19,6 +19,11 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v6
+      - name: Check deployment scripts
+        run: |
+          bash -n deploy/oracle/deploy.sh
+          bash -n deploy/oracle/backup.sh
+          bash -n deploy/oracle/install-docker-ubuntu.sh
       - name: Build CPU server image
         run: docker build -t smartsort:ci .
       - name: Start with persistent volume and classroom password
