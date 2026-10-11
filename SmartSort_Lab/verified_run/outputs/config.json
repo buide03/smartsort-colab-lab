@@ -1,0 +1,20 @@
+{
+  "SEED": 42,
+  "CLASSES": [
+    "metal",
+    "paper",
+    "plastic"
+  ],
+  "VAL_PER_CLASS": 8,
+  "BATCH_SIZE": 16,
+  "FEATURE_VIEWS": 4,
+  "HEAD_EPOCHS": 80,
+  "PATIENCE": 15,
+  "HEAD_LR": 0.003,
+  "FINE_TUNE": false,
+  "FINE_TUNE_EPOCHS": 10,
+  "FINE_TUNE_LR": 0.0001,
+  "MIN_VAL_MACRO_F1": 0.8,
+  "MIN_VAL_CLASS_RECALL": 0.6,
+  "CONFIDENCE_THRESHOLD": 0.7
+}

@@ -1,0 +1,12 @@
+{
+  "best_epoch": 79,
+  "macro_f1": 1.0,
+  "accuracy": 1.0,
+  "recall": {
+    "metal": 1.0,
+    "paper": 1.0,
+    "plastic": 1.0
+  },
+  "passed": true,
+  "training_seconds": 17.84593619999987
+}

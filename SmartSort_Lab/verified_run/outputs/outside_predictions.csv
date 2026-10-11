@@ -1,0 +1,16 @@
+﻿source_file,label,path,predicted,confidence,rejected
+test/outside/cardboard_001.png,cardboard,local_runtime\data\split\test\outside\cardboard\cardboard_001.png,paper,0.99999905,False
+test/outside/cardboard_002.png,cardboard,local_runtime\data\split\test\outside\cardboard\cardboard_002.png,paper,0.99659616,False
+test/outside/cardboard_003.png,cardboard,local_runtime\data\split\test\outside\cardboard\cardboard_003.png,paper,0.9999839,False
+test/outside/cardboard_004.png,cardboard,local_runtime\data\split\test\outside\cardboard\cardboard_004.png,paper,0.9999709,False
+test/outside/cardboard_005.png,cardboard,local_runtime\data\split\test\outside\cardboard\cardboard_005.png,paper,0.9981856,False
+test/outside/cardboard_006.png,cardboard,local_runtime\data\split\test\outside\cardboard\cardboard_006.png,paper,0.99992716,False
+test/outside/cardboard_007.png,cardboard,local_runtime\data\split\test\outside\cardboard\cardboard_007.png,paper,0.9992231,False
+test/outside/glass_001.png,glass,local_runtime\data\split\test\outside\glass\glass_001.png,plastic,0.5535394,True
+test/outside/glass_002.png,glass,local_runtime\data\split\test\outside\glass\glass_002.png,plastic,0.9940882,False
+test/outside/glass_003.png,glass,local_runtime\data\split\test\outside\glass\glass_003.png,plastic,0.8152884,False
+test/outside/glass_004.png,glass,local_runtime\data\split\test\outside\glass\glass_004.png,plastic,0.9445139,False
+test/outside/glass_005.png,glass,local_runtime\data\split\test\outside\glass\glass_005.png,plastic,0.5002159,True
+test/outside/glass_006.png,glass,local_runtime\data\split\test\outside\glass\glass_006.png,plastic,0.8214443,False
+test/outside/glass_007.png,glass,local_runtime\data\split\test\outside\glass\glass_007.png,metal,0.50366414,True
+test/outside/glass_008.png,glass,local_runtime\data\split\test\outside\glass\glass_008.png,plastic,0.95046175,False
