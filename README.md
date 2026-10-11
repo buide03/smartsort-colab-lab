@@ -1,3 +1,9 @@
+> **Học sinh Windows: một câu lệnh tự tải môi trường và mở lab.** Xem [hướng dẫn dành cho học sinh](docs/CHO_HOC_SINH_WINDOWS.md). Không cần cài Git/PyTorch hoặc quyền quản trị; có nút mở lab trên Desktop.
+
+```powershell
+& ([scriptblock]::Create((Invoke-RestMethod 'https://raw.githubusercontent.com/buide03/smartsort-colab-lab/main/start-student.ps1')))
+```
+
 > **Bản miễn phí cho lớp học: Render Static Site + Colab GPU + validation/test trong trình duyệt.** Xem [hướng dẫn deploy và thao tác](docs/DEPLOY_RENDER_STATIC.md). Chạy thử bằng `python run_browser_lab.py`, mở http://127.0.0.1:8001/. Ảnh/phiên lưu trong trình duyệt, có ZIP sao lưu/khôi phục.
 
 > **Oracle Always Free:** bản Docker có cấu hình ARM64, lưu trên ổ VM và HTTPS Caddy. Xem [hướng dẫn đăng ký, tạo VM và deploy](docs/DEPLOY_ORACLE.md).

@@ -50,3 +50,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\start-student.ps1
 Tham số `-NoBrowser`, `-NoShortcut`, `-Offline`, `-InstallRoot` và `-Port` phục vụ kiểm thử/quản lý. `-Stop` chỉ dừng PID có executable và command line khớp server của bản cài này; không tự dừng ứng dụng khác chiếm port. Launcher không xóa phiên trình duyệt khi cập nhật/dừng lab.
 
 Trình build `python browser_lab/build_student_package.py` tạo gói có đường dẫn chứa version hash; gói cũ giữ nguyên để tải không bị lẫn phiên bản trong lúc cập nhật repo. Gói không chứa dataset hay phiên học. Chưa kiểm thử trên Mac/Linux hoặc thiết bị Windows ARM64 thật; ARM64 có nguồn runtime/hash riêng, cần kiểm tra trên máy tương ứng trước khi dùng trong lớp.
+
+## Kết quả kiểm thử
+
+[Windows student launcher checks đã đạt](https://github.com/buide03/smartsort-colab-lab/actions/runs/38154659598): thư mục cài mới với Python portable thật, trang Browser Lab, MIME của module WASM, mở lại offline cùng PID, chỉ bind localhost, dừng và khởi động lại server. Cùng kiểm thử đạt trên Windows PowerShell 5.1 tại máy phát triển; thử thêm thư mục có tên tiếng Việt và câu lệnh một dòng thật, tạo được nút Desktop và mở trình duyệt. Runtime ARM64 chưa được chạy trên máy ARM64 thật.
