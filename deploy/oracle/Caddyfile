@@ -1,0 +1,4 @@
+{$SMARTSORT_DOMAIN} {
+    encode zstd gzip
+    reverse_proxy smartsort:8000
+}

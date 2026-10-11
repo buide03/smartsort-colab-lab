@@ -9,3 +9,5 @@ tests/runtime/
 .env
 .env.*
 !.env.example
+deploy/oracle/data/
+deploy/oracle/backups/

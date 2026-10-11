@@ -1,0 +1,48 @@
+services:
+  smartsort:
+    build:
+      context: ../..
+    environment:
+      PORT: "8000"
+      SMARTSORT_APP_DATA: /data/sessions
+      SMARTSORT_ALLOW_LOCAL_TRAIN: "false"
+      SMARTSORT_CLASSROOM_PASSWORD: "${SMARTSORT_CLASSROOM_PASSWORD:?Set classroom password in .env}"
+      SMARTSORT_CPU_THREADS: "2"
+      SMARTSORT_UPLOAD_LIMIT_MB: "${SMARTSORT_UPLOAD_LIMIT_MB:-64}"
+      SMARTSORT_MAX_IMAGES: "${SMARTSORT_MAX_IMAGES:-1000}"
+      SMARTSORT_MAX_SESSIONS: "${SMARTSORT_MAX_SESSIONS:-200}"
+      SMARTSORT_MAX_IMAGE_STORAGE_MB: "${SMARTSORT_MAX_IMAGE_STORAGE_MB:-512}"
+    volumes:
+      - "${SMARTSORT_DATA_DIR:-/opt/smartsort/data}:/data"
+    restart: unless-stopped
+    cpus: 1.5
+    mem_limit: 8g
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+  caddy:
+    image: caddy:2
+    environment:
+      SMARTSORT_DOMAIN: "${SMARTSORT_DOMAIN:?Set your DNS hostname in .env}"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      smartsort:
+        condition: service_healthy
+    restart: unless-stopped
+    mem_limit: 256m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+volumes:
+  caddy_data:
+  caddy_config:

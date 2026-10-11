@@ -5,8 +5,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 files = [ROOT/n for n in ['requirements.txt','requirements-server.txt','run_local.py','start_local.ps1','build_local_package.py',
                         'serve.py','Dockerfile','.dockerignore','.env.example','compose.yaml','railway.json']]
-files += [p for directory in ['smartsort_app','docs','tests','colab'] for p in (ROOT/directory).rglob('*')
-          if p.is_file() and '__pycache__' not in p.parts and 'runtime' not in p.parts and p.suffix != '.pyc']
+files += [p for directory in ['smartsort_app','docs','tests','colab','deploy'] for p in (ROOT/directory).rglob('*')
+          if p.is_file() and not {'__pycache__','runtime','data','backups'}.intersection(p.relative_to(ROOT).parts)
+          and p.suffix != '.pyc' and (not p.name.startswith('.env') or p.name=='.env.example')]
 with zipfile.ZipFile(ROOT/'SmartSort_Local_App.zip','w',zipfile.ZIP_DEFLATED) as z:
     readme=(ROOT/'README.md').read_text(encoding='utf-8').split('## Notebook Colab phiên bản trước')[0]
     z.writestr('SmartSort_Local_App/README.md',readme)
