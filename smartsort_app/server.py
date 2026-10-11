@@ -1,7 +1,10 @@
 """Local-only FastAPI interface for the teaching workflow."""
 import csv
+import base64
+import hmac
 import io
 import json
+import os
 import threading
 import uuid
 import zipfile
@@ -17,6 +20,22 @@ from . import store
 app = FastAPI(title='SmartSort Classroom', docs_url='/api/docs', redoc_url=None)
 STATIC = Path(__file__).parent / 'static'
 WORKER_LOCK = threading.Lock()
+
+
+@app.middleware('http')
+async def classroom_access(request, call_next):
+    password=os.environ.get('SMARTSORT_CLASSROOM_PASSWORD','')
+    if password and request.url.path!='/healthz':
+        authenticated=False
+        try:
+            scheme,value=request.headers.get('authorization','').split(' ',1)
+            username,supplied=base64.b64decode(value,validate=True).decode().split(':',1)
+            authenticated=scheme.lower()=='basic' and username=='class' and hmac.compare_digest(supplied.encode(),password.encode())
+        except (ValueError,UnicodeError):
+            pass
+        if not authenticated:
+            return Response('Đăng nhập lớp học',status_code=401,headers={'WWW-Authenticate':'Basic realm="SmartSort Classroom", charset="UTF-8"'})
+    return await call_next(request)
 
 
 @app.exception_handler(ValueError)
@@ -88,7 +107,7 @@ def start_job(session_id, kind, operation):
             result = operation(s, progress)
             with store.LOCK:
                 current = store.load(session_id)
-                if kind == 'train':
+                if kind in ['train','validation']:
                     current['training'] = result
                     current['phase'] = 'trained'
                 else:
@@ -112,6 +131,17 @@ def start_job(session_id, kind, operation):
 @app.get('/api/sessions')
 def list_sessions():
     return store.sessions()
+
+
+@app.get('/healthz')
+def health():
+    return {'status':'ok'}
+
+
+@app.get('/api/config')
+def app_config():
+    return {'allow_local_train':os.environ.get('SMARTSORT_ALLOW_LOCAL_TRAIN','true').lower()=='true',
+            'colab_notebook':'https://colab.research.google.com/github/buide03/smartsort-colab-lab/blob/main/colab/SmartSort_Train_Colab.ipynb'}
 
 
 @app.post('/api/sessions')
@@ -227,13 +257,16 @@ def return_to_labeling(session_id: str):
         idle(s)
         if s['phase'] in ['tested','test_failed']:
             raise ValueError('Đã mở test. Để cải tiến và đánh giá cuối, tạo phiên với test mới độc lập.')
-        s.update({'phase':'labeling','splits':None,'training':None,'selected':None,'results':None,'job':None})
+        s.update({'phase':'labeling','splits':None,'training':None,'selected':None,'results':None,'job':None,
+                  'colab_request':None,'imported':None})
         store.save(s)
         return store.public(s)
 
 
 @app.post('/api/sessions/{session_id}/train')
 def train_session(session_id: str, body: TrainRequest):
+    if os.environ.get('SMARTSORT_ALLOW_LOCAL_TRAIN','true').lower()!='true':
+        raise ValueError('Server này chỉ huấn luyện trên Colab. Xuất gói train và nhập checkpoint để chạy validation.')
     with store.LOCK:
         s = store.load(session_id)
         idle(s)
@@ -245,6 +278,55 @@ def train_session(session_id: str, body: TrainRequest):
             from .training import train_trials
             return train_trials(snapshot, settings, progress)
         start_job(session_id, 'train', operation)
+        return store.public(store.load(session_id))
+
+
+@app.post('/api/sessions/{session_id}/colab/export')
+def export_colab(session_id: str, body: TrainRequest):
+    with store.LOCK:
+        s=store.load(session_id)
+        idle(s)
+        if s['phase'] not in ['split','imported','trained']:
+            raise ValueError('Cần chia dữ liệu; không xuất kế hoạch train mới khi đã chốt/mở test.')
+        from .colab_bridge import export_train
+        p=export_train(s,body.model_dump())
+        return FileResponse(p,filename='SmartSort_Colab_Train.zip')
+
+
+@app.post('/api/sessions/{session_id}/colab/import')
+async def import_colab(session_id: str, file: UploadFile = File(...)):
+    data=await file.read(128*1024*1024+1)
+    await file.close()
+    if len(data)>128*1024*1024:
+        raise ValueError('Gói mô hình tối đa 128 MB.')
+    with store.LOCK:
+        s=store.load(session_id)
+        idle(s)
+        if s['phase'] not in ['split','imported','trained']:
+            raise ValueError('Không nhập mô hình khi đã chốt/mở test.')
+        from .colab_bridge import inspect_bundle
+        metadata=inspect_bundle(s,data)
+        import_id=uuid.uuid4().hex
+        directory=store.session_dir(session_id)/'imports'
+        directory.mkdir(exist_ok=True)
+        (directory/f'{import_id}.zip').write_bytes(data)
+        s.update({'imported':{'id':import_id,'metadata':metadata},'phase':'imported',
+                  'training':None,'selected':None,'job':None})
+        store.save(s)
+        return store.public(s)
+
+
+@app.post('/api/sessions/{session_id}/validation')
+def run_validation(session_id: str):
+    with store.LOCK:
+        s=store.load(session_id)
+        idle(s)
+        if s['phase'] not in ['imported','trained'] or not s.get('imported'):
+            raise ValueError('Nhập gói mô hình Colab trước khi chạy validation; không chạy lại sau khi chốt.')
+        def operation(snapshot,progress):
+            from .colab_bridge import validate_bundle
+            return validate_bundle(snapshot,progress)
+        start_job(session_id,'validation',operation)
         return store.public(store.load(session_id))
 
 

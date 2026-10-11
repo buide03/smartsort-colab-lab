@@ -1,0 +1,12 @@
+.git
+.venv
+.smartsort
+__pycache__
+**/__pycache__
+**/*.pyc
+SmartSort_Lab
+tests
+local_runtime
+*.zip
+docs
+colab

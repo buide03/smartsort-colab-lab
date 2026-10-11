@@ -65,6 +65,25 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(self.client.put(self.base+'/labels',json={'ids':[state['images'][0]['id']],'label':'paper'}).status_code,400)
         self.assertEqual(self.client.post(self.base+'/lock',json={'trial_id':'trial_1'}).status_code,400)
 
+    def test_hosting_access_and_train_only_export(self):
+        self.prepare()
+        with patch.dict(os.environ,{'SMARTSORT_ALLOW_LOCAL_TRAIN':'false'}):
+            self.assertFalse(self.client.get('/api/config').json()['allow_local_train'])
+            self.assertEqual(self.client.post(self.base+'/train',json={}).status_code,400)
+        response=self.client.post(self.base+'/colab/export',json={})
+        self.assertEqual(response.status_code,200)
+        import zipfile,json
+        with zipfile.ZipFile(io.BytesIO(response.content)) as z:
+            metadata=json.loads(z.read('train.json'))
+            self.assertEqual(set(r['id'] for r in metadata['images']),set(self.state()['splits']['ids']['train']))
+            self.assertTrue(all(p=='train.json' or p.startswith('train/') for p in z.namelist()))
+        self.assertEqual(self.client.post(self.base+'/validation').status_code,400)
+        with patch.dict(os.environ,{'SMARTSORT_CLASSROOM_PASSWORD':'test-class-password'}):
+            self.assertEqual(self.client.get('/healthz').status_code,200)
+            self.assertEqual(self.client.get('/api/sessions').status_code,401)
+            self.assertEqual(self.client.get('/api/sessions',auth=('class','wrong')).status_code,401)
+            self.assertEqual(self.client.get('/api/sessions',auth=('class','test-class-password')).status_code,200)
+
     def test_validation_gate_and_no_training_after_lock_or_test(self):
         self.prepare()
         def fake_train(session, settings, progress):

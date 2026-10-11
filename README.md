@@ -2,6 +2,21 @@
 
 **Sản phẩm chính: giao diện local dùng dạy học với ảnh chưa có nhãn.** Backend Python/FastAPI, giao diện HTML/CSS/JavaScript, mô hình EfficientNet-B0. Notebook Colab cũ bên dưới được giữ nguyên làm ví dụ với dữ liệu đã có nhãn.
 
+## Bản triển khai lớp học: Colab + Docker/Railway
+
+Luồng mới: **web gán nhãn/chia dữ liệu → xuất chỉ train → Colab GPU train → nhập checkpoint vào web → học sinh chạy validation → chốt cấu hình/epoch → chạy test**.
+
+- [Notebook train Colab mới](https://colab.research.google.com/github/buide03/smartsort-colab-lab/blob/main/colab/SmartSort_Train_Colab.ipynb).
+- [Hướng dẫn đầy đủ Colab và deploy Railway](docs/COLAB_VA_DEPLOY_RAILWAY.md).
+- Có `Dockerfile`, `compose.yaml`, `railway.json`, healthcheck `/healthz`, volume `/data` và mã lớp tùy chọn.
+- Bản Docker chỉ validation/test trên CPU server, không train local. Bản Python local giữ nút train máy để kiểm thử/đối chiếu.
+
+```bash
+docker compose up --build -d
+```
+
+Railway: deploy từ repo, gắn volume `/data`, đặt biến môi trường theo hướng dẫn rồi Generate Domain để có URL HTTPS cho học sinh. Mỗi service là phòng học dùng chung, các nhóm dùng phiên có tên riêng; chưa có tài khoản tách quyền giữa nhóm.
+
 ## Chạy giao diện local
 
 Hướng dẫn đầy đủ cho người mới: **[Clone repo → tạo môi trường → cài đặt → chạy](docs/CAI_DAT_VA_CHAY.md)**. Repo public; người dùng có thể clone mà không cần được cấp quyền GitHub.

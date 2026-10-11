@@ -2,6 +2,8 @@
 
 Giao diện local dùng cho bài học **từ ảnh chưa có nhãn đến huấn luyện, chốt mô hình và đánh giá test**. Mỗi phiên giữ riêng dữ liệu và kết quả. Notebook cũ trong `SmartSort_Lab/` vẫn được giữ làm ví dụ Colab với dữ liệu đã có nhãn.
 
+Bản mới hỗ trợ **train trên Colab GPU → học sinh chạy validation trên web → chốt → test**. Notebook mới nằm trong `colab/`; xem [hướng dẫn Colab và deploy Railway](COLAB_VA_DEPLOY_RAILWAY.md). Có thể dùng Docker/URL Railway cho cả lớp, không cần học sinh cài môi trường.
+
 ## Mục tiêu và chuẩn bị
 
 Học viên biết gán nhãn theo quy tắc thống nhất, phân biệt train/validation/test, thay learning rate và quan sát learning curves, chọn checkpoint bằng validation rồi đánh giá test độc lập.
@@ -53,7 +55,7 @@ Trước khi mở test có thể quay lại sửa nhãn/chia lại, nhưng lựa
 
 Mô hình là EfficientNet-B0 pretrained ImageNet, backbone đóng băng, classifier mới có ba đầu ra. Đặc trưng train được cache để chạy nhanh trên CPU. Phiên bản gốc và augmentation chỉ xuất phát từ train; validation/test không augmentation. Ảnh letterbox 224×224, chuẩn hóa ImageNet.
 
-Mặc định so sánh learning rate 0.001, 0.003, 0.01, dropout 0.2, 60 epoch tối đa, patience 12. Mỗi cấu hình chọn checkpoint macro-F1 validation cao nhất; nếu bằng nhau chọn loss thấp hơn. Các cấu hình dùng cùng một bản chia, không đọc test.
+Mặc định so sánh learning rate 0.001, 0.003, 0.01, dropout 0.2 và 60 epoch. Trong luồng Colab, xuất chỉ train; Colab lưu checkpoint từng epoch, không có validation/test và không early stopping bằng validation. Học sinh nhập gói mô hình và chạy validation trên web để chọn checkpoint macro-F1 cao nhất, nếu bằng nhau chọn loss thấp hơn. Các cấu hình dùng cùng một bản chia, không đọc test. Patience 12 chỉ dùng cho tùy chọn train local cũ.
 
 Tiêu chí chốt mặc định: macro-F1 validation ≥ 0.80, recall mỗi lớp ≥ 0.60. Đây là mục tiêu thực hành, người dạy đặt trước thí nghiệm; không hạ ngưỡng chỉ để qua test. Ngưỡng confidence 0.70 cũng đặt trước test; softmax chưa được hiệu chỉnh thành xác suất dự đoán đúng.
 

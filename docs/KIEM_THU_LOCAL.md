@@ -2,6 +2,17 @@
 
 Ngày kiểm thử: 11/10/2026. Đã chạy giao diện bằng Microsoft Edge headless trên Windows, backend FastAPI local và EfficientNet-B0 thật trên CPU (PyTorch 2.14.1, Torchvision 0.29.1). Không dùng kết quả giả để xác minh mô hình.
 
+## Luồng Colab mới và Docker/Railway
+
+- Bốn test trạng thái/hosting đã đạt: ảnh/nhãn, chia dữ liệu, khóa test, mã lớp, healthcheck và tắt train local trên cấu hình hosting.
+- `tests/verify_colab_bridge.py` đã chạy mô hình thật: gói xuất chỉ chứa train; trainer lưu checkpoint mỗi epoch; gói sai phiên hoặc có file ngoài định dạng bị từ chối; validation chỉ khởi tạo dataset validation, không khởi tạo test; khóa mô hình rồi mới chạy test và xuất ZIP.
+- `tests/verify_colab_browser.py` đã xác minh bằng Edge: tải gói train → nhập gói mô hình → bấm validation → chốt → test. Không có lỗi JavaScript.
+- Hai kiểm thử bridge dùng trainer chạy CPU với `require_cuda=False` **chỉ để xác minh phần mềm**; tiêu chí min-F1/min-recall đặt 0 trong fixture để kiểm tra luồng, không phải mục tiêu của bài học hay bằng chứng chất lượng mô hình. Mặc định của sản phẩm vẫn 0.80/0.60, notebook người dùng yêu cầu CUDA.
+- Notebook mới hợp lệ theo nbformat và code cell biên dịch được. Chưa chạy trong hosted Colab GPU.
+- Dockerfile/Compose/entrypoint và Railway config được chuẩn bị; máy hiện không có Docker engine để build container thực tế. Chưa deploy Railway vì chưa có kết nối tài khoản được xác nhận; không có URL public đã xác minh.
+
+Hướng dẫn cấu hình volume, mã lớp và domain: [COLAB_VA_DEPLOY_RAILWAY.md](COLAB_VA_DEPLOY_RAILWAY.md). Không dùng kết quả smoke test làm điểm đánh giá model cuối.
+
 ## Kiểm thử toàn quy trình
 
 - Tải ZIP 195 ảnh qua giao diện; đủ 195 ảnh bắt đầu **chưa có nhãn**, không dùng nhãn thư mục/manifest để tự gán.

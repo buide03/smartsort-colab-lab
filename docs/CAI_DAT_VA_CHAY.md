@@ -2,6 +2,8 @@
 
 Hướng dẫn này dành cho người dùng mới, từ cài môi trường đến mở giao diện và thực hiện bài lab. Không cần Node.js, npm, Docker hoặc Google Colab để chạy bản local.
 
+**Luồng lớp học mới:** train trên Colab, nhập checkpoint vào web để chạy validation và test. Xem [Colab + Docker/Railway](COLAB_VA_DEPLOY_RAILWAY.md) nếu muốn cung cấp URL cho học sinh; học sinh dùng URL không cần cài Python. Hướng dẫn dưới đây vẫn dùng để chạy backend trên máy và kiểm thử local.
+
 ## 1. Chuẩn bị
 
 | Thành phần | Yêu cầu |
@@ -108,7 +110,7 @@ Linux/macOS:
 2. **Tải ảnh:** chọn nhiều ảnh hoặc ZIP. Có thể thử ZIP mẫu tại `SmartSort_Lab/SmartSort_Dataset_Original.zip`; giao diện vẫn coi mọi ảnh là chưa có nhãn.
 3. **Gán nhãn:** chọn Nhựa/Giấy/Kim loại; có thể chọn nhiều ảnh để gán cùng nhãn. Chọn Bỏ qua cho ảnh ngoài ba lớp hoặc không phù hợp quy tắc bài học. Cần ít nhất 10 ảnh khác nhau mỗi lớp, khuyến nghị từ 50 ảnh/lớp.
 4. **Chia ba tập:** mặc định train/validation/test = 70/15/15, seed 42. Kiểm tra số lượng rồi chốt nhãn và bản chia.
-5. **Huấn luyện:** để cấu hình mặc định khi bắt đầu. Quan sát tiến độ và learning curves. Lần đầu mô hình tải trọng số ImageNet; cần Internet ở bước này. Test chưa được dùng trong huấn luyện.
+5. **Huấn luyện Colab và validation web:** đặt cấu hình, tải gói train, mở notebook Colab mới và chọn T4 GPU, train rồi nhập gói mô hình về đúng phiên. Bấm **Chạy validation trên web** để xem các cấu hình/epoch. Nút **Train trên máy (tùy chọn)** chỉ dành cho bản local khi được bật; bản Docker tắt nút này.
 6. **Chốt cấu hình:** xem bảng validation, chọn cấu hình đạt tiêu chí. Mặc định macro-F1 validation ≥ 0.80 và recall từng lớp ≥ 0.60; đây là mục tiêu thực hành đặt trước thí nghiệm.
 7. **Chạy test:** bấm “Mở test & thu kết quả”. Đọc accuracy, precision/recall/F1, confusion matrix và ảnh sai.
 8. **Tải kết quả:** tải ZIP báo cáo/checkpoint/CSV. Có thể thử ảnh mới sau khi test hoàn tất.

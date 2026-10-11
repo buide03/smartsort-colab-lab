@@ -1,0 +1,14 @@
+services:
+  smartsort:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      PORT: "8000"
+      SMARTSORT_APP_DATA: /data/sessions
+      SMARTSORT_ALLOW_LOCAL_TRAIN: "false"
+    volumes:
+      - smartsort_data:/data
+    restart: unless-stopped
+volumes:
+  smartsort_data:
