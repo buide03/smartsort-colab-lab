@@ -33,7 +33,7 @@ with sync_playwright() as p:
     page.click('#confirmNew')
     page.wait_for_function("!document.querySelector('#newDialog').open")
     upload_public_fixture(page, dataset)
-    page.wait_for_function("document.querySelector('#labelFilter')?.value==='unlabeled'",timeout=60000)
+    page.wait_for_function("document.querySelector('#labelFilter')?.value==='all'",timeout=60000)
     sid=page.locator('#sessionPicker').input_value()
     base='http://127.0.0.1:8000/api/sessions/'+sid
     state=page.request.get(base).json()

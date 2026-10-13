@@ -10,7 +10,7 @@ import uuid
 import zipfile
 from pathlib import Path
 
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -162,7 +162,13 @@ def get_session(session_id: str):
 
 
 @app.post('/api/sessions/{session_id}/images')
-async def upload_images(session_id: str, files: list[UploadFile] = File(...)):
+async def upload_images(session_id: str, files: list[UploadFile] = File(...), labels_by_filename: str = Form('{}')):
+    try:
+        reviewed_labels = json.loads(labels_by_filename)
+    except (ValueError, TypeError):
+        raise ValueError('Danh sách nhãn ảnh không hợp lệ.')
+    if not isinstance(reviewed_labels, dict) or any(label not in store.CLASSES + ['exclude'] for label in reviewed_labels.values()):
+        raise ValueError('Nhãn vật liệu không hợp lệ.')
     uploads = []
     total = 0
     limit_mb=int(os.environ.get('SMARTSORT_UPLOAD_LIMIT_MB','64'))
@@ -185,6 +191,7 @@ async def upload_images(session_id: str, files: list[UploadFile] = File(...)):
             nonlocal added, duplicates
             try:
                 if store.add_image(s, name, content):
+                    s['images'][-1]['label'] = reviewed_labels.get(name)
                     added += 1
                 else:
                     duplicates += 1

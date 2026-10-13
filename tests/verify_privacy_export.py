@@ -64,6 +64,8 @@ with sync_playwright() as playwright:
     assert page.locator('[data-accept]').is_disabled()
     mask_text()
     page.locator('[data-review]').check()
+    assert page.locator('[data-accept]').is_disabled()
+    page.locator('[data-review-label]').select_option('paper')
     # Bypass BrowserLab upload only to inspect the actual human-approved sanitized File.
     page.evaluate('''() => {
       const original = BrowserLab.fetch;

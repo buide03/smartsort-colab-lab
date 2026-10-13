@@ -41,12 +41,12 @@ with sync_playwright() as p:
     page.wait_for_function("document.querySelector('#sessionPicker')?.selectedOptions[0]?.textContent==='Kiểm thử đầy đủ — dữ liệu mẫu'")
     page.wait_for_selector('#uploadInput',state='attached')
     upload_public_fixture(page, ZIP)
-    page.wait_for_function("document.querySelector('#labelFilter')?.value==='unlabeled'",timeout=60000)
+    page.wait_for_function("document.querySelector('#labelFilter')?.value==='all'",timeout=60000)
     session_id=page.locator('#sessionPicker').input_value()
     base=f'http://127.0.0.1:8000/api/sessions/{session_id}'
     request=page.request
     state=request.get(base).json()
-    assert len(state['images'])==195 and state['unlabeled']==195
+    assert len(state['images'])==195 and state['excluded']==195
     assert request.post(base+'/test').status==400
     # Exercise the visible bulk-label UI before applying the reference fixture.
     page.locator('[data-select]').first.check()

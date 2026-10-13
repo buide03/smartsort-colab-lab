@@ -1,5 +1,6 @@
 """Tests for dataset integrity and the train/validation/lock/test boundaries."""
 import io
+import json
 import os
 import tempfile
 import time
@@ -30,6 +31,23 @@ class WorkflowTests(unittest.TestCase):
 
     def state(self):
         return self.client.get(self.base).json()
+
+    def test_upload_with_reviewed_labels(self):
+        response = self.client.post(self.base+'/images',
+            files=[('files', ('safe.png', image_bytes(1), 'image/png'))],
+            data={'labels_by_filename': json.dumps({'safe.png': 'paper'})})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['session']['images'][0]['label'], 'paper')
+        duplicate = self.client.post(self.base+'/images',
+            files=[('files', ('another.png', image_bytes(1), 'image/png'))],
+            data={'labels_by_filename': json.dumps({'another.png': 'metal'})})
+        self.assertEqual(duplicate.json()['duplicates'], 1)
+        self.assertEqual(self.state()['images'][0]['label'], 'paper')
+        invalid = self.client.post(self.base+'/images',
+            files=[('files', ('invalid.png', image_bytes(2), 'image/png'))],
+            data={'labels_by_filename': json.dumps({'invalid.png': 'unknown'})})
+        self.assertEqual(invalid.status_code, 400)
+        self.assertEqual(len(self.state()['images']), 1)
 
     def prepare(self):
         files = [('files', (f'image-{i}.png', image_bytes(i), 'image/png')) for i in range(30)]

@@ -57,11 +57,15 @@ with sync_playwright() as playwright:
     page.mouse.move(canvas['x'] + canvas['width'] * .41, canvas['y'] + canvas['height'] * .61)
     page.mouse.up()
     page.locator('[data-review]').check()
+    assert page.locator('[data-accept]').is_disabled()
+    page.locator('[data-review-label]').select_option('metal')
     page.locator('[data-accept]').click()
     page.wait_for_function('session.images.length === 1')
     assert page.evaluate('imageWrites') == 1
     assert not page.evaluate('async () => (await safeUpload.text()).includes("PRIVATE_NAME_PHONE")')
     record = page.evaluate('session.images[0]')
+    assert record['label'] == 'metal'
+    assert page.evaluate('session.unlabeled') == 0
     assert record['filename'].startswith('image_') and 'Nguyen' not in record['filename']
     pixels = page.evaluate('''async () => {
       const blob = await (await fetch(BrowserLab.imageURL(session.id, session.images[0].id))).blob();
@@ -78,6 +82,7 @@ with sync_playwright() as playwright:
     page.set_input_files('#uploadInput', {'name':'private.zip','mimeType':'application/zip','buffer':buffer.getvalue()})
     page.wait_for_selector('.privacy-dialog[open]')
     page.locator('[data-review]').check()
+    page.locator('[data-review-label]').select_option('paper')
     page.locator('[data-accept]').click()
     page.wait_for_function('document.querySelector(".privacy-dialog")?.textContent.includes("Ảnh 2 / 2")')
     page.locator('[data-cancel]').click()
@@ -99,6 +104,7 @@ with sync_playwright() as playwright:
     }''')
     page.set_input_files('#predictInput', payload)
     page.wait_for_selector('.privacy-dialog[open]')
+    assert page.locator('[data-review-label]').count() == 0
     assert page.evaluate('predictCalls') == 0
     page.locator('[data-cancel]').click()
     page.wait_for_selector('.privacy-dialog', state='detached')

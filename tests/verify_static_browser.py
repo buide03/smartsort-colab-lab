@@ -61,9 +61,9 @@ with sync_playwright() as playwright:
         error=float(np.max(np.abs(np.array(actual)-expected)));preprocess_error=max(preprocess_error,error)
         assert error<1e-5,(width,height,error)
     upload_public_fixture(page, dataset)
-    page.wait_for_function("document.querySelector('#labelFilter')?.value==='unlabeled'",timeout=90000)
+    page.wait_for_function("document.querySelector('#labelFilter')?.value==='all'",timeout=90000)
     sid=page.locator('#sessionPicker').input_value();base='/api/sessions/'+sid
-    state=call(page,base)['data'];assert len(state['images'])==195 and all(r['label'] is None for r in state['images'])
+    state=call(page,base)['data'];assert len(state['images'])==195 and all(r['label']=='exclude' for r in state['images'])
     for label in ['metal','paper','plastic','exclude']:
         ids=[r['id'] for r in state['images'] if reference[r['pixel_hash']]==label]
         assert call(page,base+'/labels',{'ids':ids,'label':label},'PUT')['status']==200

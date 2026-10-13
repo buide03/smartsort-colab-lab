@@ -66,4 +66,14 @@ $('#restoreInput').addEventListener('change',event=>act(async()=>{const file=eve
 '''
 (OUT/'app.js').write_text(app,encoding='utf-8',newline='\n')
 shutil.copyfile(ROOT/'browser_lab/browser-engine.js',OUT/'browser-engine.js')
+# Give changed assets new URLs so reloads also refresh cached frontend code.
+import re
+html=(OUT/'index.html').read_text(encoding='utf-8')
+def version_asset(match):
+    prefix,path,suffix=match.groups()
+    asset=OUT/path.lstrip('/')
+    version=hashlib.sha256(asset.read_bytes()).hexdigest()[:12]
+    return prefix+path+'?v='+version+suffix
+html=re.sub(r'(src="|href=")(/[^"?]+\.(?:js|css))(")',version_asset,html)
+(OUT/'index.html').write_text(html,encoding='utf-8',newline='\n')
 print('Built static_site: Render Static Site, no Python backend required')

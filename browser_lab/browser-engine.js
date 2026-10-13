@@ -202,10 +202,12 @@ const BrowserLab = (() => {
     idle(s);
     if(action==='images'){
       phase(s,['labeling']);const files=body.getAll('files');require(files.reduce((a,f)=>a+f.size,0)<=64*1024*1024,'Mỗi lượt tải tối đa 64 MB.');
+      const reviewedLabels=JSON.parse(body.get('labels_by_filename')||'{}');
+      require(reviewedLabels && typeof reviewedLabels==='object' && !Array.isArray(reviewedLabels) && Object.values(reviewedLabels).every(label=>[...classes,'exclude'].includes(label)),'Nhãn vật liệu không hợp lệ.');
       const result={added:0,duplicates:0,rejected:[]},seen=new Set(s.images.map(r=>r.pixel_hash));
       const add=async(name,blob)=>{try{const p=await pixels(blob),hash=await pixelHash(p);if(seen.has(hash)){result.duplicates++;return;}
           require(s.images.length<1000,'Mỗi phiên tối đa 1.000 ảnh.');require((s.image_bytes||0)+p.blob.size<=512*1024*1024,'Dung lượng ảnh phiên vượt 512 MB.');
-          const row={id:uid(),filename:name.split('/').pop().slice(0,180),label:null,pixel_hash:hash,width:p.width,height:p.height};
+          const row={id:uid(),filename:name.split('/').pop().slice(0,180),label:reviewedLabels[name]??null,pixel_hash:hash,width:p.width,height:p.height};
           await put('images',s.id+'/'+row.id,p.blob);s.images.push(row);s.image_bytes=(s.image_bytes||0)+p.blob.size;seen.add(hash);result.added++;
         }catch(error){result.rejected.push({filename:name,reason:error.message});}};
       for(const file of files){if(file.name.toLowerCase().endsWith('.zip')){try{const entries=unzip(await bytes(file),120*1024*1024);for(const [name,data] of Object.entries(entries))if(/\.(png|jpe?g|webp|bmp)$/i.test(name))await add(name,new Blob([data]));}catch(error){result.rejected.push({filename:file.name,reason:error.message});}}

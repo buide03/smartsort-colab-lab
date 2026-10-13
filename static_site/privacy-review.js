@@ -29,7 +29,7 @@ window.PrivacyReview = (() => {
     if (!images.length) throw new Error('Không có ảnh để kiểm tra PII.');
     return images;
   }
-  async function review(file, index, count) {
+  async function review(file, index, count, labeling) {
     const bitmap = await createImageBitmap(file);
     if (bitmap.width * bitmap.height > 25_000_000) {
       bitmap.close();
@@ -37,18 +37,20 @@ window.PrivacyReview = (() => {
     }
     const dialog = document.createElement('dialog');
     dialog.className = 'privacy-dialog';
-    dialog.innerHTML = `<h2>Kiểm tra & che thông tin cá nhân</h2>
+    dialog.innerHTML = `<h2>${labeling ? 'Kiểm tra PII & gán nhãn ảnh' : 'Kiểm tra & che thông tin cá nhân'}</h2>
       <p>Ảnh ${index + 1} / ${count}. Tìm khuôn mặt, họ tên, số điện thoại, địa chỉ, mã học sinh, biển số, mã QR hoặc thông tin trên giấy tờ.</p>
       <p>Kéo để khoanh vùng cần che. Dùng ô đen phủ kín thông tin; giữ phần vật liệu cần phân loại. Phóng to bằng trình duyệt nếu cần đọc chi tiết.</p>
       <canvas aria-label="Kéo trên ảnh để che PII"></canvas>
+      ${labeling ? `<label>Ảnh này thuộc vật liệu nào?<select data-review-label aria-label="Nhãn vật liệu"><option value="">Chọn nhãn…</option><option value="metal">Kim loại</option><option value="paper">Giấy</option><option value="plastic">Nhựa</option><option value="exclude">Bỏ qua — ngoài ba lớp / không phù hợp</option></select></label>` : '<p>Mô hình đã chốt sẽ phân loại ảnh sau khi bạn kiểm tra và che PII.</p>'}
       <div class="dialog-actions"><button type="button" class="button ghost" data-undo>Hoàn tác vùng cuối</button><button type="button" class="button ghost" data-skip>Bỏ ảnh này</button></div>
       <label class="privacy-check"><input type="checkbox" data-review> Tôi đã tự kiểm tra toàn bộ ảnh và che hết thông tin cá nhân nhìn thấy. Nếu ảnh không có PII, tôi đã xác nhận bằng cách xem kỹ ảnh.</label>
       <p>Bạn cần tự phát hiện PII và kiểm tra từng ảnh, kể cả chữ nhỏ, khuôn mặt, biển số và mã QR. Nếu che làm mất đặc điểm vật liệu, hãy bỏ ảnh. Chỉ bản đã che và duyệt được lưu/gửi đi, với tên mới và không kèm metadata ảnh gốc.</p>
-      <div class="dialog-actions"><button type="button" class="button ghost" data-cancel>Hủy lượt tải</button><button type="button" class="button primary" data-accept disabled>Dùng ảnh đã kiểm tra</button></div>
+      <div class="dialog-actions"><button type="button" class="button ghost" data-cancel>Hủy lượt tải</button><button type="button" class="button primary" data-accept disabled>${labeling ? 'Lưu ảnh đã kiểm tra & nhãn' : 'Dùng ảnh đã kiểm tra'}</button></div>
       <p data-error role="alert"></p>`;
     document.body.append(dialog);
     const canvas = dialog.querySelector('canvas'), ctx = canvas.getContext('2d');
     const check = dialog.querySelector('[data-review]'), accept = dialog.querySelector('[data-accept]');
+    const label = dialog.querySelector('[data-review-label]');
     canvas.width = bitmap.width; canvas.height = bitmap.height;
     const boxes = [];
     let start = null;
@@ -82,20 +84,24 @@ window.PrivacyReview = (() => {
     });
     canvas.addEventListener('pointercancel', () => { start = null; draw(); });
     dialog.querySelector('[data-undo]').onclick = () => { boxes.pop(); invalidate(); draw(); };
-    check.onchange = () => { accept.disabled = !check.checked || start !== null; };
+    const update = () => { accept.disabled = !check.checked || start !== null || (labeling && !label.value); };
+    check.onchange = update;
+    if (label) label.onchange = update;
     try {
       return await new Promise(resolve => {
         dialog.addEventListener('cancel', event => { event.preventDefault(); resolve(null); });
         dialog.querySelector('[data-cancel]').onclick = () => resolve(null);
         dialog.querySelector('[data-skip]').onclick = () => resolve('skip');
         accept.onclick = async () => {
-          if (!check.checked || start) return;
+          if (!check.checked || start || (labeling && !label.value)) return;
           accept.disabled = true;
           try {
             draw();
             const blob = await new Promise(done => canvas.toBlob(done, 'image/png'));
             if (!blob) throw new Error('Không tạo được ảnh đã che.');
-            resolve(new File([blob], `image_${crypto.randomUUID()}.png`, {type:'image/png'}));
+            const safe = new File([blob], `image_${crypto.randomUUID()}.png`, {type:'image/png'});
+            if (labeling) safe.reviewLabel = label.value;
+            resolve(safe);
           } catch (error) {
             dialog.querySelector('[data-error]').textContent = error.message;
             accept.disabled = false;
@@ -107,7 +113,7 @@ window.PrivacyReview = (() => {
       bitmap.close(); canvas.width = canvas.height = 0; dialog.close(); dialog.remove();
     }
   }
-  async function prepare(fileList, limitMB = 64) {
+  async function prepare(fileList, limitMB = 64, {labeling = false} = {}) {
     if (busy) throw new Error('Hãy hoàn tất bước kiểm tra PII đang mở.');
     busy = true;
     try {
@@ -116,7 +122,7 @@ window.PrivacyReview = (() => {
       const images = await expand(files), result = [];
       let total = 0;
       for (let i = 0; i < images.length; i++) {
-        const safe = await review(images[i], i, images.length);
+        const safe = await review(images[i], i, images.length, labeling);
         if (safe === null) return [];
         if (safe === 'skip') continue;
         total += safe.size;
