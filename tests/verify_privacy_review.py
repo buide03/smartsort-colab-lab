@@ -66,6 +66,11 @@ with sync_playwright() as playwright:
     record = page.evaluate('session.images[0]')
     assert record['label'] == 'metal'
     assert page.evaluate('session.unlabeled') == 0
+    page.wait_for_selector('#splitAction')
+    assert page.evaluate('page') == 2
+    assert page.locator('.privacy-dialog').count() == 0
+    page.evaluate('go(1)')
+    assert not page.locator('details.card').evaluate('(node) => node.open')
     assert record['filename'].startswith('image_') and 'Nguyen' not in record['filename']
     pixels = page.evaluate('''async () => {
       const blob = await (await fetch(BrowserLab.imageURL(session.id, session.images[0].id))).blob();
@@ -89,6 +94,42 @@ with sync_playwright() as playwright:
     page.wait_for_selector('.privacy-dialog', state='detached')
     assert page.evaluate('imageWrites') == 1
     assert page.evaluate('session.images.length') == 1
+    page.reload()
+    page.wait_for_selector('#splitAction')
+    assert page.evaluate('session.images[0].label') == 'metal'
+    page.evaluate('go(1)')
+    page.locator('#labelReview summary').click()
+    page.locator('[data-select]').first.check()
+    assert page.locator('#labelReview').evaluate('(node) => node.open')
+    page.locator('#batchLabel').select_option('metal')
+    page.locator('#applyBatch').click()
+    page.wait_for_function('selected.size === 0')
+    assert page.locator('#labelReview').evaluate('(node) => node.open')
+    # Save enough labeled images in the initial review, then split without relabeling.
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, 'w') as archive:
+        for i in range(30):
+            image = Image.new('RGB', (40, 40), (i + 1, 100, 200))
+            encoded = io.BytesIO()
+            image.save(encoded, 'PNG')
+            archive.writestr(f'{i}.png', encoded.getvalue())
+    page.set_input_files('#uploadInput', {'name':'batch.zip','mimeType':'application/zip','buffer':buffer.getvalue()})
+    for i in range(30):
+        page.wait_for_function(f'document.querySelector(".privacy-dialog")?.textContent.includes("Ảnh {i + 1} / 30.")')
+        page.locator('[data-review-label]').select_option(['metal', 'paper', 'plastic'][i // 10])
+        page.locator('[data-review]').check()
+        page.locator('[data-accept]').click()
+    page.wait_for_selector('#splitAction')
+    assert page.evaluate('session.unlabeled') == 0
+    labels_before = page.evaluate('session.images.map(row => [row.id, row.label])')
+    page.locator('#splitAction').click()
+    page.wait_for_function('session.splits !== null')
+    assert page.evaluate('session.images.map(row => [row.id, row.label])') == labels_before
+    partitions = page.evaluate('session.splits.ids')
+    assert set(partitions) == {'train', 'validation', 'test'}
+    assigned = [image_id for ids in partitions.values() for image_id in ids]
+    assert len(assigned) == len(set(assigned)) == 31
+    assert page.locator('.privacy-dialog').count() == 0
     # Test the existing prediction handler without loading/training a model.
     page.evaluate('''() => {
       document.querySelector('#content').innerHTML = '<input id="predictInput" type="file"><button id="choosePredict">Chọn</button><div id="predictResult"></div>';
@@ -118,4 +159,4 @@ with sync_playwright() as playwright:
     assert page.evaluate('predictionFilename').startswith('image_')
     assert not errors, errors
     browser.close()
-print('PASS: masks, neutral filenames, upload/prediction gates, ZIP batch cancellation')
+print('PASS: masks, saved labels, direct split navigation, reload, three disjoint splits, ZIP cancellation, prediction gates')

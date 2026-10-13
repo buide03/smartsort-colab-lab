@@ -11,3 +11,6 @@ def upload_public_fixture(page, path):
         page.locator('[data-review-label]').select_option('exclude')
         page.locator('[data-review]').check()
         page.locator('[data-accept]').click()
+    # Production proceeds to splitting; fixtures deliberately revisit optional edits.
+    page.evaluate('go(1)')
+    page.locator('details.card summary').click()

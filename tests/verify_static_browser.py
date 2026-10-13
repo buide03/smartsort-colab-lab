@@ -67,7 +67,7 @@ with sync_playwright() as playwright:
     for label in ['metal','paper','plastic','exclude']:
         ids=[r['id'] for r in state['images'] if reference[r['pixel_hash']]==label]
         assert call(page,base+'/labels',{'ids':ids,'label':label},'PUT')['status']==200
-    page.reload(wait_until='networkidle');page.wait_for_selector('#labelFilter')
+    page.reload(wait_until='networkidle');page.wait_for_selector('#splitAction')
     page.locator('#steps [data-go="2"]').click();page.click('#splitAction')
     page.wait_for_selector('a[href$="dataset.zip"]');state=call(page,base)['data']
     parts=[set(ids) for ids in state['splits']['ids'].values()];assert sum(map(len,parts))==len(set.union(*parts))==180
