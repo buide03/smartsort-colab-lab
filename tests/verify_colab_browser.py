@@ -6,6 +6,7 @@ import zipfile
 from pathlib import Path
 from PIL import Image
 from playwright.sync_api import sync_playwright
+from tests.privacy_fixture_review import upload_public_fixture
 from colab.train_colab import train_package
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -31,7 +32,7 @@ with sync_playwright() as p:
     page.fill('#newTitle','Luồng Colab — minh họa kiểm thử')
     page.click('#confirmNew')
     page.wait_for_function("!document.querySelector('#newDialog').open")
-    page.set_input_files('#uploadInput',str(dataset))
+    upload_public_fixture(page, dataset)
     page.wait_for_function("document.querySelector('#labelFilter')?.value==='unlabeled'",timeout=60000)
     sid=page.locator('#sessionPicker').input_value()
     base='http://127.0.0.1:8000/api/sessions/'+sid

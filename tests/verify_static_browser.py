@@ -10,6 +10,7 @@ import zipfile
 import numpy as np
 from PIL import Image,ImageOps
 from playwright.sync_api import sync_playwright
+from tests.privacy_fixture_review import upload_public_fixture
 from colab.train_browser_colab import train_browser_package
 from tests.verify_test_visualization import verify_gallery
 
@@ -59,7 +60,7 @@ with sync_playwright() as playwright:
         expected=((expected-np.array([.485,.456,.406]))/np.array([.229,.224,.225])).transpose(2,0,1).flatten()
         error=float(np.max(np.abs(np.array(actual)-expected)));preprocess_error=max(preprocess_error,error)
         assert error<1e-5,(width,height,error)
-    page.set_input_files('#uploadInput',str(dataset))
+    upload_public_fixture(page, dataset)
     page.wait_for_function("document.querySelector('#labelFilter')?.value==='unlabeled'",timeout=90000)
     sid=page.locator('#sessionPicker').input_value();base='/api/sessions/'+sid
     state=call(page,base)['data'];assert len(state['images'])==195 and all(r['label'] is None for r in state['images'])

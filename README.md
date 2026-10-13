@@ -12,6 +12,8 @@
 
 # SmartSort Classroom — huấn luyện, chốt mô hình và đánh giá test
 
+**Che thông tin cá nhân (PII):** người gán nhãn tự kiểm tra từng ảnh và khoanh vùng che trên máy trước khi lưu ảnh gán nhãn hoặc thử ảnh mới, kể cả ảnh trong ZIP. Chỉ đưa bản đã che và duyệt vào gói train Colab. Xem [hướng dẫn che PII](docs/CHE_PII.md).
+
 **Trực quan kết quả test:** bước 5 có thư viện ảnh đúng/sai, bộ lọc từng vật liệu, độ tin cậy và xác suất ba lớp. Xem [hướng dẫn đọc kết quả trên ảnh](docs/XEM_KET_QUA_TEST.md). Model phân loại cả ảnh; không tạo khung vị trí vật thể.
 
 **Sản phẩm chính: giao diện local dùng dạy học với ảnh chưa có nhãn.** Backend Python/FastAPI, giao diện HTML/CSS/JavaScript, mô hình EfficientNet-B0. Notebook Colab cũ bên dưới được giữ nguyên làm ví dụ với dữ liệu đã có nhãn.

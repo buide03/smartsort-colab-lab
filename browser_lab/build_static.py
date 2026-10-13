@@ -34,7 +34,8 @@ if not license_path.exists():
         license_path.write_bytes(r.read())
 source=ROOT/'smartsort_app/static'
 shutil.copyfile(source/'style.css',OUT/'style.css')
-with (OUT/'style.css').open('a',encoding='utf-8') as f:
+shutil.copyfile(source/'privacy-review.js',OUT/'privacy-review.js')
+with (OUT/'style.css').open('a',encoding='utf-8',newline='\n') as f:
     f.write('\n.session-tools{flex-wrap:wrap;justify-content:flex-end}.topbar{flex-wrap:wrap;gap:12px;padding:16px 0}@media(max-width:650px){.session-tools{justify-content:flex-start}.session-tools select{max-width:100%;width:100%}.session-tools .button{font-size:11px;padding:8px 10px}}\n')
 index=(source/'index.html').read_text(encoding='utf-8').replace('>+</head>','></head>')
 index=index.replace('Phiên học được lưu trên server.','Lưu trên trình duyệt này · Xuất ZIP để sao lưu.')
@@ -42,9 +43,9 @@ index=index.replace('CLASSROOM LAB','BROWSER LAB')
 index=index.replace('<button class="button ghost" id="newSession">',
     '<button class="button ghost" id="backupSession">↓ Sao lưu phiên</button><button class="button ghost" id="restoreSession">↑ Mở bản sao lưu</button><input id="restoreInput" type="file" accept=".zip" hidden><button class="button ghost" id="newSession">')
 index=index.replace('<script src="/app.js"></script>',
-    '<script src="/vendor/fflate.js"></script><script src="/vendor/ort.wasm.min.js"></script><script src="/browser-engine.js"></script><script src="/app.js"></script>')
+    '<script src="/vendor/ort.wasm.min.js"></script><script src="/browser-engine.js"></script><script src="/app.js"></script>')
 index=index.replace('<div id="content"></div>','<div class="notice" style="margin:20px 0">Ảnh và model lưu trên trình duyệt này. Dùng cùng máy/trình duyệt để quay lại phiên; sao lưu ZIP trước khi đổi máy hoặc xóa dữ liệu trình duyệt. Validation/test dùng CPU máy học sinh; train dùng Colab GPU.</div><div id="content"></div>')
-(OUT/'index.html').write_text(index,encoding='utf-8')
+(OUT/'index.html').write_text(index,encoding='utf-8',newline='\n')
 app=(source/'app.js').read_text(encoding='utf-8')
 app=app.replace('function url(path) { return `/api/sessions/${session.id}/${path}`; }',
     'function url(path) { return path.startsWith("images/") ? BrowserLab.imageURL(session.id,path.slice(7)) : `/api/sessions/${session.id}/${path}`; }')
@@ -63,6 +64,6 @@ $('#backupSession').addEventListener('click',()=>act(()=>BrowserLab.backup(sessi
 $('#restoreSession').addEventListener('click',()=>$('#restoreInput').click());
 $('#restoreInput').addEventListener('change',event=>act(async()=>{const file=event.target.files[0];if(!file)return;const id=await BrowserLab.restore(file);await loadSessions(id);toast('Đã mở phiên từ bản sao lưu.');}));
 '''
-(OUT/'app.js').write_text(app,encoding='utf-8')
+(OUT/'app.js').write_text(app,encoding='utf-8',newline='\n')
 shutil.copyfile(ROOT/'browser_lab/browser-engine.js',OUT/'browser-engine.js')
 print('Built static_site: Render Static Site, no Python backend required')

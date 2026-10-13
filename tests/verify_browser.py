@@ -12,6 +12,7 @@ import zipfile
 from pathlib import Path
 from PIL import Image
 from playwright.sync_api import sync_playwright
+from tests.privacy_fixture_review import upload_public_fixture
 
 HERE=Path(__file__).resolve().parents[1]
 OUT=HERE/'tests/runtime'
@@ -39,7 +40,7 @@ with sync_playwright() as p:
     page.wait_for_function("!document.querySelector('#newDialog').open")
     page.wait_for_function("document.querySelector('#sessionPicker')?.selectedOptions[0]?.textContent==='Kiểm thử đầy đủ — dữ liệu mẫu'")
     page.wait_for_selector('#uploadInput',state='attached')
-    page.set_input_files('#uploadInput',str(ZIP))
+    upload_public_fixture(page, ZIP)
     page.wait_for_function("document.querySelector('#labelFilter')?.value==='unlabeled'",timeout=60000)
     session_id=page.locator('#sessionPicker').input_value()
     base=f'http://127.0.0.1:8000/api/sessions/{session_id}'
